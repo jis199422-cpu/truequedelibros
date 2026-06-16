@@ -1,0 +1,56 @@
+version: '3.9'
+
+# ── Desarrollo local ──────────────────────────────────────────────────────────
+# Secrets y config sensible viven en .env (git-ignorado).
+# Creá el archivo copiando .env.example y completando los valores reales.
+#
+# Levantar:   docker-compose up -d
+# Rebuild:    docker-compose up -d --build
+# Logs:       docker-compose logs -f backend
+# Bajar:      docker-compose down
+# Reset DB:   docker-compose down -v
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: truequedelibros-postgres
+    environment:
+      POSTGRES_DB: truequedelibros
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d truequedelibros"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend/truequedelibros
+      dockerfile: Dockerfile
+    container_name: truequedelibros-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    env_file: .env          # carga todos los secrets desde .env
+    environment:
+      # Sobreescribe el localhost del .env con el hostname del servicio postgres en Docker
+      DB_URL: jdbc:postgresql://postgres:5432/truequedelibros
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

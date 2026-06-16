@@ -1,0 +1,26 @@
+const LABELS = {
+  FICCION: 'Ficción',
+  NO_FICCION: 'No Ficción',
+  CIENCIA_FICCION: 'Ciencia Ficción',
+  FANTASIA: 'Fantasía',
+  MISTERIO: 'Misterio',
+  ROMANCE: 'Romance',
+  HISTORIA: 'Historia',
+  CIENCIAS: 'Ciencias',
+  FILOSOFIA: 'Filosofía',
+  ARTE: 'Arte',
+  INFANTIL: 'Infantil',
+  JUVENIL: 'Juvenil',
+  AUTOAYUDA: 'Autoayuda',
+  BIOGRAFIA: 'Biografía',
+  TERROR: 'Terror',
+  PSICOLOGIA: 'Psicología',
+  TECNOLOGIA: 'Tecnología',
+  NEGOCIOS: 'Negocios',
+  COCINA: 'Cocina',
+  POESIA: 'Poesía',
+  POLITICA: 'Política',
+  OTROS: 'Otros',
+}
+
+export const genreLabel = (genre) => LABELS[genre] ?? genre

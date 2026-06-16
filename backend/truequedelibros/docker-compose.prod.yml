@@ -1,0 +1,88 @@
+version: '3.9'
+
+# ── Producción ────────────────────────────────────────────────────────────────
+# Requiere .env.prod (git-ignorado) con los secrets reales.
+#
+# Levantar:   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# Rebuild:    docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Logs:       docker-compose -f docker-compose.prod.yml logs -f backend
+# Bajar:      docker-compose -f docker-compose.prod.yml down
+# Reset DB:   docker-compose -f docker-compose.prod.yml down -v
+#
+# Backup:
+#   - Se ejecuta todos los días a las 3 AM UTC
+#   - Los dumps van a S3://${S3_BUCKET_NAME}/db/
+#   - Se conservan los últimos 30 días de backups
+#   - Restaurar: descargar el .sql.gz de S3 y hacer pg_restore
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: truequedelibros-postgres
+    environment:
+      POSTGRES_DB: truequedelibros
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - internal
+
+  backend:
+    image: eclipse-temurin:21-jre-alpine
+    container_name: truequedelibros-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      # Copiar el JAR al servidor con ese nombre antes de levantar
+      - ./truequedelibros.jar:/app/app.jar:ro
+    working_dir: /app
+    entrypoint: ["java", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+    env_file: .env.prod
+    environment:
+      # Sobreescribe el localhost de .env.prod con el hostname del servicio postgres en Docker
+      DB_URL: jdbc:postgresql://postgres:5432/truequedelibros
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - internal
+
+  backup:
+    image: eeshugerman/postgres-backup-s3:16
+    container_name: truequedelibros-backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SCHEDULE: "0 3 * * *"
+      BACKUP_KEEP_DAYS: 30
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: truequedelibros
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      S3_REGION: ${AWS_REGION}
+      S3_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_BUCKET: ${S3_BUCKET_NAME}
+      S3_PREFIX: db
+    restart: unless-stopped
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+
+networks:
+  internal:
+    driver: bridge

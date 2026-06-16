@@ -1,0 +1,1 @@
+ALTER TABLE books ADD COLUMN precio DECIMAL(10,2);

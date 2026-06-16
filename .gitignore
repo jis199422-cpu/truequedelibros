@@ -1,0 +1,19 @@
+# Secrets — nunca commitear
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Build artifacts
+target/
+dist/
+node_modules/
+*.env

@@ -1,0 +1,284 @@
+Ready to code?
+
+ Here is Claude's plan:
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Plan: Módulo Comunidad
+ Contexto
+ Los usuarios necesitan un espacio donde publicar ideas e imágenes, comentar y dar likes a las publicaciones de otros. El feed usa "formato burbuja" (posts con más interacción al principio) con lazy loading de 10 posts por
+ página. Horarios en zona Argentina (UTC-3). MVP con posts, comentarios, respuestas (1 nivel), likes en posts y en comentarios.
+
+ ---
+ Backend — nuevo módulo comunidad/
+
+ 1. Migración V12
+
+ Archivo: src/main/resources/db/migration/V12__comunidad_schema.sql
+
+ CREATE TABLE posts (
+     id            UUID         PRIMARY KEY,
+     author_id     UUID         NOT NULL REFERENCES users(id),
+     content       TEXT         NOT NULL,
+     image_url     VARCHAR(500),
+     like_count    INT          NOT NULL DEFAULT 0,
+     comment_count INT          NOT NULL DEFAULT 0,
+     created_at    TIMESTAMP    NOT NULL,
+     updated_at    TIMESTAMP    NOT NULL
+ );
+
+ CREATE TABLE post_comments (
+     id                UUID  PRIMARY KEY,
+     post_id           UUID  NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+     author_id         UUID  NOT NULL REFERENCES users(id),
+     content           TEXT  NOT NULL,
+     parent_comment_id UUID  REFERENCES post_comments(id) ON DELETE CASCADE,
+     like_count        INT   NOT NULL DEFAULT 0,
+     created_at        TIMESTAMP NOT NULL,
+     updated_at        TIMESTAMP NOT NULL
+ );
+
+ CREATE TABLE post_likes (
+     id      UUID PRIMARY KEY,
+     user_id UUID NOT NULL REFERENCES users(id),
+     post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+     CONSTRAINT uq_post_like UNIQUE (user_id, post_id)
+ );
+
+ CREATE TABLE comment_likes (
+     id         UUID PRIMARY KEY,
+     user_id    UUID NOT NULL REFERENCES users(id),
+     comment_id UUID NOT NULL REFERENCES post_comments(id) ON DELETE CASCADE,
+     CONSTRAINT uq_comment_like UNIQUE (user_id, comment_id)
+ );
+
+ CREATE INDEX idx_posts_bubble     ON posts (like_count, comment_count, created_at);
+ CREATE INDEX idx_post_comments_pid ON post_comments (post_id);
+
+ ---
+ 2. Entidades
+
+ comunidad/domain/Post.java
+ - UUID id (@GeneratedValue(strategy = UUID))
+ - @ManyToOne(LAZY) User author
+ - String content (@Column(columnDefinition="TEXT"))
+ - String imageUrl (nullable)
+ - int likeCount, int commentCount (contadores desnormalizados)
+ - LocalDateTime createdAt, updatedAt
+ - @PrePersist / @PreUpdate para timestamps
+
+ comunidad/domain/PostComment.java
+ - UUID id, @ManyToOne(LAZY) Post post, @ManyToOne(LAZY) User author
+ - String content
+ - @ManyToOne(LAZY) PostComment parentComment (nullable — 1 nivel de respuestas)
+ - int likeCount
+ - LocalDateTime createdAt, updatedAt
+
+ comunidad/domain/PostLike.java
+ - UUID id, @ManyToOne(LAZY) User user, @ManyToOne(LAZY) Post post
+ - @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id","post_id"}))
+ - Patrón idéntico a BookLike.java
+
+ comunidad/domain/CommentLike.java
+ - UUID id, @ManyToOne(LAZY) User user, @ManyToOne(LAZY) PostComment comment
+ - @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id","comment_id"}))
+
+ ---
+ 3. DTOs
+
+ Requests:
+ - CreatePostRequest — @NotBlank @Size(max=1000) String content, String imageUrl (opcional)
+ - UpdatePostRequest — igual
+ - CreateCommentRequest — @NotBlank @Size(max=500) String content, UUID parentCommentId (opcional)
+ - UploadUrlRequest — reutilizar el de book/dto/ (ya tiene filename + contentType)
+
+ Responses:
+ // PostResponse (record)
+ record PostResponse(
+     UUID id, UUID authorId, String authorName, String authorAvatarUrl,
+     String content, String imageUrl,
+     int likeCount, int commentCount,
+     LocalDateTime createdAt,
+     boolean likedByCurrentUser
+ ) {}
+
+ // CommentResponse (record)
+ record CommentResponse(
+     UUID id, UUID authorId, String authorName, String authorAvatarUrl,
+     String content, int likeCount, LocalDateTime createdAt,
+     boolean likedByCurrentUser,
+     UUID parentCommentId, List<CommentResponse> replies
+ ) {}
+
+ // PostFeedPage (record)
+ record PostFeedPage(List<PostResponse> posts, boolean hasMore, int nextPage) {}
+
+ ---
+ 4. Repositorios
+
+ PostRepository — JpaRepository<Post, UUID>
+ @Query(value = """
+     SELECT p.* FROM posts p
+     ORDER BY (p.like_count * 2 + p.comment_count) DESC, p.created_at DESC
+     """, nativeQuery = true,
+   countQuery = "SELECT COUNT(*) FROM posts")
+ Page<Post> findAllBubbleSorted(Pageable pageable);
+
+ PostCommentRepository — JpaRepository<PostComment, UUID>
+ List<PostComment> findByPostIdOrderByCreatedAtAsc(UUID postId);
+
+ PostLikeRepository — JpaRepository<PostLike, UUID>
+ Optional<PostLike> findByUserIdAndPostId(UUID userId, UUID postId);
+ Set<UUID> findPostIdsByUserIdAndPostIdIn(UUID userId, Set<UUID> postIds);
+ // (o usar: existsByUserIdAndPostId para el toggle)
+
+ CommentLikeRepository — JpaRepository<CommentLike, UUID>
+ Optional<CommentLike> findByUserIdAndCommentId(UUID userId, UUID commentId);
+ boolean existsByUserIdAndCommentId(UUID userId, UUID commentId);
+
+ ---
+ 5. Servicios
+
+ PostService (@Service @Transactional)
+ - getFeed(User user, int page) → PostFeedPage
+   - PageRequest.of(page, 10) con findAllBubbleSorted
+   - Batch-check liked: postLikeRepository.existsByUserIdAndPostId por cada post (o query IN)
+ - createPost(User user, CreatePostRequest req) → PostResponse
+ - updatePost(UUID postId, User user, UpdatePostRequest req) → lanza AppException(FORBIDDEN) si no es autor ni admin
+ - deletePost(UUID postId, User user) → idem control de autor
+ - togglePostLike(UUID postId, User user) → guarda/elimina PostLike, actualiza post.likeCount ±1
+ - getPostUploadUrl(String filename, String contentType) → llama S3StorageService igual que en BookService
+
+ CommentService (@Service @Transactional)
+ - getComments(UUID postId, User user) → List<CommentResponse> (árbol: raíces + replies anidadas)
+ - createComment(UUID postId, User user, CreateCommentRequest req) → incrementa post.commentCount
+ - updateComment(UUID postId, UUID commentId, User user, ...) → control de autor
+ - deleteComment(UUID postId, UUID commentId, User user) → decrementa post.commentCount
+ - toggleCommentLike(UUID commentId, User user) → guarda/elimina CommentLike, actualiza comment.likeCount ±1
+
+ ---
+ 6. Controlador
+
+ PostController — @RestController @RequestMapping("/api/comunidad/posts")
+
+ ┌────────┬────────────────────────────┬──────────────────────┐
+ │ Método │            Ruta            │         Body         │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ GET    │ /                          │ ?page=0              │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ POST   │ /                          │ CreatePostRequest    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ POST   │ /upload-url                │ UploadUrlRequest     │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ PUT    │ /{id}                      │ UpdatePostRequest    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ DELETE │ /{id}                      │ —                    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ POST   │ /{id}/likes                │ —                    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ GET    │ /{id}/comments             │ —                    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ POST   │ /{id}/comments             │ CreateCommentRequest │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ PUT    │ /{id}/comments/{cId}       │ UpdateCommentRequest │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ DELETE │ /{id}/comments/{cId}       │ —                    │
+ ├────────┼────────────────────────────┼──────────────────────┤
+ │ POST   │ /{id}/comments/{cId}/likes │ —                    │
+ └────────┴────────────────────────────┴──────────────────────┘
+
+ anyRequest().authenticated() ya cubre estos endpoints sin cambios en SecurityConfig.
+
+ ---
+ Frontend — nuevo feature features/comunidad/
+
+ 7. Estructura de archivos
+
+ features/comunidad/
+   api/
+     comunidad.api.js
+   components/
+     PostCard.jsx        — card con avatar, nombre, fecha ARG, contenido, imagen, like/comentario counts, botón like
+     PostForm.jsx        — form crear/editar (textarea + upload imagen opcional)
+     CommentList.jsx     — lista de comentarios raíz + respuestas anidadas
+     CommentItem.jsx     — un comentario: avatar, nombre, fecha, like, responder, editar/eliminar
+     CommentForm.jsx     — textarea inline para nuevo comentario / respuesta
+   pages/
+     ComunidadPage.jsx   — feed con IntersectionObserver, botón "Nuevo post"
+     PostDetailPage.jsx  — post + hilo completo de comentarios
+
+ 8. API client (comunidad.api.js)
+
+ import client from '../../../shared/api/client'
+
+ export const getPosts = (page = 0) => client.get(`/comunidad/posts?page=${page}`)
+ export const createPost = (data) => client.post('/comunidad/posts', data)
+ export const updatePost = (id, data) => client.put(`/comunidad/posts/${id}`, data)
+ export const deletePost = (id) => client.delete(`/comunidad/posts/${id}`)
+ export const togglePostLike = (id) => client.post(`/comunidad/posts/${id}/likes`)
+ export const getPostUploadUrl = (filename, contentType) =>
+   client.post('/comunidad/posts/upload-url', { filename, contentType })
+
+ export const getComments = (postId) => client.get(`/comunidad/posts/${postId}/comments`)
+ export const createComment = (postId, data) => client.post(`/comunidad/posts/${postId}/comments`, data)
+ export const updateComment = (postId, cId, data) => client.put(`/comunidad/posts/${postId}/comments/${cId}`, data)
+ export const deleteComment = (postId, cId) => client.delete(`/comunidad/posts/${postId}/comments/${cId}`)
+ export const toggleCommentLike = (postId, cId) => client.post(`/comunidad/posts/${postId}/comments/${cId}/likes`)
+
+ 9. Lazy loading (patrón LikesPage)
+
+ ComunidadPage usa IntersectionObserver sobre un sentinel <div ref={sentinelRef} /> al final del listado. Mantiene pageRef = useRef(0) y hasMore en estado. Appends nuevos posts al array existente.
+
+ 10. Fecha en horario Argentina
+
+ function formatDate(dateStr) {
+   return new Date(dateStr).toLocaleString('es-AR', {
+     timeZone: 'America/Argentina/Buenos_Aires',
+     day: '2-digit', month: '2-digit', year: 'numeric',
+     hour: '2-digit', minute: '2-digit'
+   })
+ }
+
+ 11. Upload de imagen (patrón presigned S3)
+
+ Igual que BookFormPage:
+ 1. getPostUploadUrl(file.name, file.type) → { uploadUrl, imageUrl }
+ 2. fetch(uploadUrl, { method: 'PUT', body: file }) directo a S3
+ 3. imageUrl se incluye en CreatePostRequest
+
+ 12. Rutas en App.jsx
+
+ Dentro de <ProtectedRoute> > <AppLayout>:
+ import { ComunidadPage } from './features/comunidad/pages/ComunidadPage'
+ import { PostDetailPage } from './features/comunidad/pages/PostDetailPage'
+ // ...
+ <Route path="/comunidad" element={<ComunidadPage />} />
+ <Route path="/comunidad/:postId" element={<PostDetailPage />} />
+
+ 13. BottomNav — 6.° ítem en AppLayout.jsx
+
+ Agregar entre Mensajes y Puntos Seguros:
+ <NavLink to="/comunidad" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+   <ComunidadIcon />
+   <span>Comunidad</span>
+ </NavLink>
+ Icono SVG: burbuja de diálogo con personas (similar a un foro).
+
+ 14. Edit/Delete en UI
+
+ - Mostrar opciones sólo cuando post.authorId === user.id || user.role === 'ADMIN'
+ - Tres puntos (···) en PostCard que abre mini-menú inline con "Editar" / "Eliminar"
+ - Confirmación antes de eliminar post (ya que borra también sus comentarios en cascade)
+
+ ---
+ Verificación
+
+ 1. Correr migración V12: mvnw spring-boot:run y verificar que levanta sin error
+ 2. Probar endpoints con Postman/curl:
+   - POST /api/comunidad/posts → crear post
+   - GET /api/comunidad/posts?page=0 → ver feed ordenado por score
+   - POST /api/comunidad/posts/{id}/likes × 2 → toggle (like / unlike)
+   - POST /api/comunidad/posts/{id}/comments → agregar comentario
+   - POST /api/comunidad/posts/{id}/comments/{cId}/likes → like en comentario
+ 3. Frontend: npm run dev, navegar a /comunidad, crear post con imagen, comentar, dar like, verificar orden burbuja, scroll hasta abajo para ver lazy load de página 2
+ 4. Verificar fecha en hora Argentina (UTC-3)
+ 5. Verificar que solo el autor ve "Editar / Eliminar"
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌

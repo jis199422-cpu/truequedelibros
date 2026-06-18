@@ -90,6 +90,13 @@ public class LikeService {
         if (book.getOwner().getId().equals(liker.getId())) {
             throw new AppException("No puedes dar like a tus propios libros", HttpStatus.BAD_REQUEST);
         }
+        boolean pureTrueque = book.isTrueque() && !book.isVenta() && !book.isRegalo();
+        if (pureTrueque && !bookRepository.existsByOwner_IdAndStatusAndTrueque(
+                liker.getId(), BookStatus.AVAILABLE, true)) {
+            throw new AppException(
+                    "Necesitás tener al menos un libro disponible para trueque para dar like a este libro",
+                    HttpStatus.BAD_REQUEST);
+        }
         if (bookLikeRepository.existsByLiker_IdAndBook_Id(liker.getId(), bookId)) {
             throw new AppException("Ya diste like a este libro", HttpStatus.CONFLICT);
         }
@@ -100,6 +107,12 @@ public class LikeService {
         bookLikeRepository.save(BookLike.builder().liker(liker).book(book).build());
 
         User owner = book.getOwner();
+
+        if (book.isVenta() || book.isRegalo()) {
+            Conversation conversation = conversationService.openBookContact(liker, book);
+            return new LikeResult(false, null, conversation.getId(), true);
+        }
+
         Optional<BookLike> mutualLike =
                 bookLikeRepository.findFirstByLiker_IdAndBook_Owner_Id(owner.getId(), liker.getId());
 
@@ -111,11 +124,11 @@ public class LikeService {
             Conversation conversation = conversationService.findOrCreate(liker, owner);
             notificationService.notifyMatch(liker, owner, match.getId());
 
-            return new LikeResult(true, match.getId(), conversation.getId());
+            return new LikeResult(true, match.getId(), conversation.getId(), false);
         }
 
         notificationService.notifyBookLiked(owner, liker, book.getTitle(), bookId);
-        return new LikeResult(false, null, null);
+        return new LikeResult(false, null, null, false);
     }
 
     @Transactional
@@ -155,6 +168,6 @@ public class LikeService {
         return new LikesPage(items, result.hasNext(), result.getTotalElements());
     }
 
-    public record LikeResult(boolean matched, UUID matchId, UUID conversationId) {}
+    public record LikeResult(boolean matched, UUID matchId, UUID conversationId, boolean directContact) {}
     public record LikesPage(List<ReceivedLikeResponse> items, boolean hasMore, long totalCount) {}
 }

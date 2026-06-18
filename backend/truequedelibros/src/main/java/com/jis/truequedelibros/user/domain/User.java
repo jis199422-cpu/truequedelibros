@@ -71,6 +71,17 @@ public class User implements UserDetails {
 
     private LocalDateTime lastLogin;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean onboardingCompleted = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "onboarding_intent")
+    private OnboardingIntent onboardingIntent;
+
+    @Column(name = "onboarding_notes", length = 500)
+    private String onboardingNotes;
+
     @PrePersist
     void prePersist() {
         createdAt = updatedAt = LocalDateTime.now();

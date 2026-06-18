@@ -31,6 +31,13 @@ public class LikeController {
                     "conversationId", result.conversationId()
             ));
         }
+        if (result.directContact()) {
+            return ResponseEntity.ok(Map.of(
+                    "matched", false,
+                    "directContact", true,
+                    "conversationId", result.conversationId()
+            ));
+        }
         return ResponseEntity.ok(Map.of("matched", false));
     }
 

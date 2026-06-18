@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/authStore'
+import useLikeGateStore from '../../feed/store/likeGateStore'
 import { getPublicProfile } from '../../../shared/api/users.api'
 import { updateBook, deleteBook } from '../../../shared/api/books.api'
 import { Spinner } from '../../../shared/components/Spinner'
@@ -9,6 +10,8 @@ import { Spinner } from '../../../shared/components/Spinner'
 export function MyBooksPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const updateUser = useAuthStore((s) => s.updateUser)
+  const setHasBooks = useLikeGateStore((s) => s.setHasBooks)
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -26,7 +29,11 @@ export function MyBooksPage() {
     const newStatus = book.status === 'AVAILABLE' ? 'UNAVAILABLE' : 'AVAILABLE'
     try {
       await updateBook(book.id, { status: newStatus })
-      setBooks((prev) => prev.map((b) => b.id === book.id ? { ...b, status: newStatus } : b))
+      const updatedBooks = books.map((b) => b.id === book.id ? { ...b, status: newStatus } : b)
+      const nowHasBooks = updatedBooks.some((b) => b.status === 'AVAILABLE')
+      setBooks(updatedBooks)
+      updateUser({ hasBooks: nowHasBooks })
+      setHasBooks(nowHasBooks)
     } catch {
       toast.error('Error al actualizar el estado')
     }
@@ -36,7 +43,11 @@ export function MyBooksPage() {
     if (!confirm('¿Eliminar este libro?')) return
     try {
       await deleteBook(bookId)
-      setBooks((prev) => prev.filter((b) => b.id !== bookId))
+      const remaining = books.filter((b) => b.id !== bookId)
+      const nowHasBooks = remaining.some((b) => b.status === 'AVAILABLE')
+      setBooks(remaining)
+      updateUser({ hasBooks: nowHasBooks })
+      setHasBooks(nowHasBooks)
       toast.success('Libro eliminado')
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al eliminar el libro')

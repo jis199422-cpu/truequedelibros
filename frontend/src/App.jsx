@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { trackPageView } from './shared/utils/metaPixel'
+import { trackPageView, trackSectionViewed } from './shared/utils/metaPixel'
 import useAuthStore from './features/auth/store/authStore'
 import { refresh } from './shared/api/auth.api'
 import { StompProvider } from './features/chat/context/StompContext'
@@ -24,6 +24,7 @@ import { AdminLayout } from './features/admin/components/AdminLayout'
 import { AdminDashboard } from './features/admin/pages/AdminDashboard'
 import { AdminUsersPage } from './features/admin/pages/AdminUsersPage'
 import { AdminBooksPage } from './features/admin/pages/AdminBooksPage'
+import { OnboardingPage } from './features/onboarding/pages/OnboardingPage'
 import { ManagedExchangePage } from './features/managedExchange/pages/ManagedExchangePage'
 import { BeneficiosPage } from './features/beneficios/pages/BeneficiosPage'
 import { LocalDashboardPage } from './features/beneficios/pages/LocalDashboardPage'
@@ -58,11 +59,22 @@ function AuthInitializer({ children }) {
   return children
 }
 
+function getSection(pathname) {
+  if (pathname === '/feed') return 'feed'
+  if (pathname.startsWith('/likes')) return 'likes'
+  if (pathname.startsWith('/chat')) return 'messages'
+  if (pathname.startsWith('/puntos-seguros')) return 'puntos_seguros'
+  return null
+}
+
 function RouteTracker() {
   const location = useLocation()
   const accessToken = useAuthStore((s) => s.accessToken)
   useEffect(() => {
+    if (location.pathname === '/auth/google/callback') return
     if (!accessToken) trackPageView()
+    const section = getSection(location.pathname)
+    if (section) trackSectionViewed(section)
   }, [location.pathname, accessToken])
   return null
 }
@@ -109,6 +121,7 @@ export default function App() {
 
           {/* Protected */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route element={<AppLayout />}>
               <Route path="/likes" element={<LikesPage />} />
               <Route path="/chat" element={<ConversationListPage />} />

@@ -8,6 +8,8 @@ import com.jis.truequedelibros.auth.dto.RegisterRequest;
 import com.jis.truequedelibros.auth.dto.UserResponse;
 import com.jis.truequedelibros.auth.repository.EmailVerificationTokenRepository;
 import com.jis.truequedelibros.auth.repository.PasswordResetTokenRepository;
+import com.jis.truequedelibros.book.domain.BookStatus;
+import com.jis.truequedelibros.book.repository.BookRepository;
 import com.jis.truequedelibros.shared.exception.AppException;
 import com.jis.truequedelibros.user.domain.Role;
 import com.jis.truequedelibros.user.domain.User;
@@ -33,6 +35,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
+    private final BookRepository bookRepository;
 
     @Value("${app.email-verification.expiration-hours}")
     private long verificationExpirationHours;
@@ -40,7 +43,7 @@ public class AuthService {
     @Transactional
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException("El email ya está registrado", HttpStatus.CONFLICT);
+            return;
         }
 
         User user = userRepository.save(User.builder()
@@ -129,7 +132,10 @@ public class AuthService {
                 .role(user.getRole())
                 .emailVerified(user.isEmailVerified())
                 .premium(user.isPremium())
-.build();
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .onboardingIntent(user.getOnboardingIntent() != null ? user.getOnboardingIntent().name() : null)
+                .hasBooks(bookRepository.existsByOwner_IdAndStatus(user.getId(), BookStatus.AVAILABLE))
+                .build();
     }
 
     private LoginResult buildLoginResult(User user) {

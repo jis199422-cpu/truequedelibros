@@ -1,8 +1,10 @@
 package com.jis.truequedelibros.user.service;
 
 import com.jis.truequedelibros.auth.dto.UserResponse;
+import com.jis.truequedelibros.auth.service.AuthService;
 import com.jis.truequedelibros.book.service.BookService;
 import com.jis.truequedelibros.shared.exception.AppException;
+import com.jis.truequedelibros.user.domain.OnboardingIntent;
 import com.jis.truequedelibros.user.domain.User;
 import com.jis.truequedelibros.user.dto.LocationRequest;
 import com.jis.truequedelibros.user.dto.PublicProfileResponse;
@@ -22,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookService bookService;
     private final GeocodingService geocodingService;
+    private final AuthService authService;
 
     @Transactional
     public UserResponse updateProfile(UUID userId, UpdateUserRequest request) {
@@ -32,16 +35,7 @@ public class UserService {
         if (request.getProfilePictureUrl() != null) user.setProfilePictureUrl(request.getProfilePictureUrl());
 
         userRepository.save(user);
-
-        return UserResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .city(user.getCity())
-                .profilePictureUrl(user.getProfilePictureUrl())
-                .role(user.getRole())
-                .emailVerified(user.isEmailVerified())
-                .build();
+        return authService.toUserResponse(user);
     }
 
     @Transactional
@@ -57,7 +51,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PublicProfileResponse getPublicProfile(UUID userId) {
+    public PublicProfileResponse getPublicProfile(UUID userId, UUID requesterId) {
         User user = findById(userId);
         return PublicProfileResponse.builder()
                 .id(user.getId())
@@ -65,7 +59,7 @@ public class UserService {
                 .bio(user.getBio())
                 .city(user.getCity())
                 .profilePictureUrl(user.getProfilePictureUrl())
-                .books(bookService.getByOwner(userId))
+                .books(bookService.getByOwner(userId, requesterId))
                 .premium(user.isPremium())
                 .build();
     }
@@ -75,6 +69,19 @@ public class UserService {
         User user = findById(userId);
         user.setSubscriptionInterest(interested);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public UserResponse saveOnboarding(UUID userId, OnboardingIntent intent, String customIntent) {
+        if (intent == OnboardingIntent.OTRO && (customIntent == null || customIntent.isBlank())) {
+            throw new AppException("Describí tu objetivo para continuar", HttpStatus.BAD_REQUEST);
+        }
+        User user = findById(userId);
+        user.setOnboardingCompleted(true);
+        user.setOnboardingIntent(intent);
+        if (intent == OnboardingIntent.OTRO) user.setOnboardingNotes(customIntent.trim());
+        userRepository.save(user);
+        return authService.toUserResponse(user);
     }
 
     private User findById(UUID userId) {

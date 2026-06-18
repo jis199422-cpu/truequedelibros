@@ -56,7 +56,7 @@ public class ConversationController {
         if (!book.isVenta() && !book.isRegalo()) {
             throw new AppException("Este libro no está disponible para contacto directo", HttpStatus.BAD_REQUEST);
         }
-        Conversation conv = conversationService.findOrCreate(user, book.getOwner());
+        Conversation conv = conversationService.openBookContact(user, book);
         return ResponseEntity.ok(Map.of("conversationId", conv.getId()));
     }
 

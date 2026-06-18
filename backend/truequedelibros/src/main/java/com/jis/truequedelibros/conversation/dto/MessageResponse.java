@@ -15,5 +15,6 @@ public class MessageResponse {
     private String senderName;
     private String content;
     private boolean read;
+    private boolean system;
     private OffsetDateTime createdAt;
 }

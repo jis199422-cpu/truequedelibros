@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
 import { getCurrentUser } from '../../../shared/api/auth.api'
-import { trackCompleteRegistration } from '../../../shared/utils/metaPixel'
+import { trackRegistrationCompleted } from '../../../shared/utils/metaPixel'
 
 export function GoogleCallbackPage() {
   const [params] = useSearchParams()
@@ -27,8 +27,8 @@ export function GoogleCallbackPage() {
       .then(({ data }) => {
         if (cancelled) return
         setAuth(accessToken, data)
-        if (isNewUser) trackCompleteRegistration()
-        navigate('/feed', { replace: true })
+        if (isNewUser) trackRegistrationCompleted({ authMethod: 'google', source: 'direct' })
+        navigate(data.onboardingCompleted ? '/feed' : '/onboarding', { replace: true })
       })
       .catch(() => {
         if (cancelled) return

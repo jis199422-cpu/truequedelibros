@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { trackLead } from '../../../shared/utils/metaPixel'
+import { trackAuthPromptShown, trackAuthPromptCtaClicked, trackBookLiked } from '../../../shared/utils/metaPixel'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/authStore'
 import { getFeed, dislikeBook } from '../../../shared/api/books.api'
 import { getDailyLikeStatus } from '../../../shared/api/matches.api'
-import { updateLocation, getUserInterests } from '../../../shared/api/users.api'
+import { updateLocation } from '../../../shared/api/users.api'
 import { getCurrentUser } from '../../../shared/api/auth.api'
 import { startOfferConversation, startBookConversation } from '../../../shared/api/conversations.api'
 import useLikeGateStore from '../store/likeGateStore'
@@ -16,7 +16,7 @@ import { BookDetailSheet } from '../components/BookDetailSheet'
 import { LocationPermissionModal } from '../components/LocationPermissionModal'
 import { PremiumModal } from '../../../shared/components/PremiumModal'
 import { LikeGateModal } from '../components/LikeGateModal'
-import { InterestsModal } from '../components/InterestsModal'
+import { TruequeGateModal } from '../components/TruequeGateModal'
 import { Spinner } from '../../../shared/components/Spinner'
 import { PlanLectorSection } from '../../readingPlans/components/PlanLectorSection'
 
@@ -30,13 +30,13 @@ export function FeedPage() {
   const hasBooks = useLikeGateStore((s) => s.hasBooks)
   const resetAt = useLikeGateStore((s) => s.resetAt)
 
-  const { handleLike: triggerLike, match, clearMatch, gateModal, clearGateModal, markWarning } = useLikeBook()
+  const { handleLike: triggerLike, match, clearMatch, directContact, clearDirectContact, gateModal, clearGateModal, markWarning } = useLikeBook()
 
   const autoReloadTriggered = useRef(false)
   const interactedIds = useRef(new Set())
+  const shownIds = useRef(new Set())
 
   const [queue, setQueue] = useState([])
-  const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
   const [detailBook, setDetailBook] = useState(null)
@@ -46,17 +46,21 @@ export function FeedPage() {
   )
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [showPremiumModal, setShowPremiumModal] = useState(false)
-  const [showInterestsModal, setShowInterestsModal] = useState(false)
   const [offering, setOffering] = useState(false)
   const [guestCoords, setGuestCoords] = useState(null)
+  const [showTruequeGateModal, setShowTruequeGateModal] = useState(false)
+  const [truequeOnlyCount, setTruequeOnlyCount] = useState(0)
 
-  const loadMore = useCallback(async (nextPage, overrideLat, overrideLng, force = false) => {
+  const truequeGated = currentUser?.onboardingIntent === 'INTERCAMBIAR' && !hasBooks
+
+  const loadMore = useCallback(async (overrideLat, overrideLng, force = false) => {
     if (!force && !hasMore) return
     try {
       const lat = overrideLat ?? guestCoords?.lat ?? currentUser?.latitude ?? null
       const lng = overrideLng ?? guestCoords?.lng ?? currentUser?.longitude ?? null
-      const { data } = await getFeed(nextPage, null, lat, lng)
+      const { data } = await getFeed(Array.from(shownIds.current), null, lat, lng)
       const books = Array.isArray(data?.books) ? data.books : []
+      books.forEach((b) => shownIds.current.add(b.id))
       const hasUninteracted = books.some((b) => !interactedIds.current.has(b.id))
       if (hasUninteracted) autoReloadTriggered.current = false
       setQueue((prev) => {
@@ -64,7 +68,7 @@ export function FeedPage() {
         return [...prev, ...books.filter((b) => !ids.has(b.id) && !interactedIds.current.has(b.id))]
       })
       setHasMore(data?.hasMore ?? false)
-      setPage(nextPage + 1)
+      setTruequeOnlyCount(data?.truequeOnlyCount ?? 0)
     } catch {
       toast.error('Error al cargar libros')
     }
@@ -72,9 +76,20 @@ export function FeedPage() {
 
   useEffect(() => {
     let cancelled = false
-    loadMore(0, undefined, undefined, true).finally(() => { if (!cancelled) setLoading(false) })
+    loadMore(undefined, undefined, true).finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (showAuthPrompt) trackAuthPromptShown(interactedIds.current.size)
+  }, [showAuthPrompt])
+
+  useEffect(() => {
+    if (directContact) {
+      navigate(`/chat/${directContact.conversationId}`)
+      clearDirectContact()
+    }
+  }, [directContact])
 
   useEffect(() => {
     if (!isGuest) {
@@ -86,12 +101,6 @@ export function FeedPage() {
     }
   }, [isGuest])
 
-  useEffect(() => {
-    if (isGuest) return
-    getUserInterests()
-      .then(({ data }) => { if (data.length === 0) setShowInterestsModal(true) })
-      .catch(() => {})
-  }, [isGuest])
 
   useEffect(() => {
     if (!isGuest && !locationDismissed && (!currentUser?.latitude || !currentUser?.longitude)) {
@@ -103,7 +112,7 @@ export function FeedPage() {
     if (queue.length === 0 && !loading && !autoReloadTriggered.current) {
       autoReloadTriggered.current = true
       setLoading(true)
-      loadMore(0, undefined, undefined, true).finally(() => setLoading(false))
+      loadMore(undefined, undefined, true).finally(() => setLoading(false))
     }
   }, [queue.length, loading])
 
@@ -112,20 +121,23 @@ export function FeedPage() {
   }, [])
 
   const handleLike = async () => {
-    if (isGuest) { setShowAuthPrompt(true); return }
+    if (isGuest) { setShowAuthPrompt(true); return false }
+    if (truequeGated) { setShowTruequeGateModal(true); return false }
     const book = queue[0]
     interactedIds.current.add(book.id)
     removeTop()
-    if (queue.length - 1 < 3 && hasMore) loadMore(page)
+    if (queue.length - 1 < 3 && hasMore) loadMore()
+    trackBookLiked({ bookTitle: book.title, bookGenre: book.genre, ownerUserId: book.owner?.id })
     await triggerLike(book)
   }
 
   const handleDislike = async () => {
-    if (isGuest) { setShowAuthPrompt(true); return }
+    if (isGuest) { setShowAuthPrompt(true); return false }
+    if (truequeGated) { setShowTruequeGateModal(true); return false }
     const book = queue[0]
     interactedIds.current.add(book.id)
     removeTop()
-    if (queue.length - 1 < 3 && hasMore) loadMore(page)
+    if (queue.length - 1 < 3 && hasMore) loadMore()
     try {
       await dislikeBook(book.id)
     } catch {}
@@ -133,6 +145,7 @@ export function FeedPage() {
 
   const handleOffer = async () => {
     if (isGuest) { setShowAuthPrompt(true); return }
+    if (truequeGated) { setShowTruequeGateModal(true); return }
     if (!currentUser?.premium) { setShowPremiumModal(true); return }
     const book = queue[0]
     if (!book) return
@@ -149,12 +162,15 @@ export function FeedPage() {
 
   const handleChat = async () => {
     if (isGuest) { setShowAuthPrompt(true); return }
+    if (truequeGated) { setShowTruequeGateModal(true); return }
     const book = queue[0]
     if (!book) return
     setOffering(true)
     try {
       const { data } = await startBookConversation(book.id)
-      navigate(`/chat/${data.conversationId}`)
+      navigate(`/chat/${data.conversationId}`, {
+        state: { bookHint: { ownerName: book.owner?.name, isVenta: book.venta, isRegalo: book.regalo } },
+      })
     } catch {
       toast.error('Error al iniciar el chat')
     } finally {
@@ -174,11 +190,11 @@ export function FeedPage() {
       setGuestCoords({ lat: latitude, lng: longitude })
     }
     setShowLocationModal(false)
+    shownIds.current = new Set()
     setQueue([])
-    setPage(0)
     setHasMore(true)
     setLoading(true)
-    loadMore(0, latitude, longitude, true).finally(() => setLoading(false))
+    loadMore(latitude, longitude, true).finally(() => setLoading(false))
   }
 
   if (loading) return (
@@ -196,24 +212,31 @@ export function FeedPage() {
           <span style={{ fontSize: '3.5rem' }}>📚</span>
           <h2>¡Has visto todos los libros cercanos!</h2>
           <p>Vuelve pronto para descubrir nuevos libros</p>
-          {!isGuest && !hasBooks && (
-            <div className="feed-no-books-warning">
-              Solo se muestran libros para venta y/o regalo hasta que{' '}
-              <button className="feed-no-books-warning-link" onClick={() => navigate('/books/new')}>
-                agregues un libro para trueque
-              </button>.
+          {!isGuest && currentUser?.onboardingIntent === 'INTERCAMBIAR' && !hasBooks && (
+            <div className="feed-trueque-warning">
+              Agregá un libro para comenzar a hacer trueque.{' '}
+              <button className="feed-trueque-warning-link" onClick={() => navigate('/books/new')}>
+                ¡Click acá!
+              </button>
+            </div>
+          )}
+          {!isGuest && currentUser?.onboardingIntent !== 'INTERCAMBIAR' && truequeOnlyCount > 0 && (
+            <div className="feed-trueque-hint">
+              Hay {truequeOnlyCount} libro{truequeOnlyCount === 1 ? '' : 's'} para intercambiar. Subí tu primer libro y desbloqueá tu próxima lectura.{' '}
+              <button className="feed-trueque-hint-link" onClick={() => navigate('/books/new')}>
+                Agregar un libro
+              </button>
             </div>
           )}
           <button
             className="btn btn-outline btn-sm"
             style={{ marginTop: '0.5rem', width: 'auto' }}
-            onClick={() => { setPage(0); setLoading(true); loadMore(0, undefined, undefined, true).finally(() => setLoading(false)) }}
+            onClick={() => { shownIds.current = new Set(); setLoading(true); loadMore(undefined, undefined, true).finally(() => setLoading(false)) }}
           >
             Recargar
           </button>
         </div>
         {match && <MatchModal book={match.book} conversationId={match.conversationId} onClose={clearMatch} />}
-        {showInterestsModal && <InterestsModal onDone={() => setShowInterestsModal(false)} />}
         {!isGuest && (
           <button className={`feed-fab${!hasBooks ? ' feed-fab--glow' : ''}`} aria-label="Agregar libro" onClick={() => navigate('/books/new')}>+</button>
         )}
@@ -268,12 +291,12 @@ export function FeedPage() {
           </button>.
         </div>
       )}
-      {!isGuest && !hasBooks && (
-        <div className="feed-no-books-warning" style={{ margin: '0.75rem 1rem 0' }}>
-          Solo se muestran libros para venta y/o regalo hasta que{' '}
-          <button className="feed-no-books-warning-link" onClick={() => navigate('/books/new')}>
-            agregues un libro para trueque
-          </button>.
+      {!isGuest && currentUser?.onboardingIntent === 'INTERCAMBIAR' && !hasBooks && (
+        <div className="feed-trueque-warning" style={{ margin: '0.75rem 1rem 0' }}>
+          Agregá un libro para comenzar a hacer trueque.{' '}
+          <button className="feed-trueque-warning-link" onClick={() => navigate('/books/new')}>
+            ¡Click acá!
+          </button>
         </div>
       )}
     <PlanLectorSection isGuest={isGuest} />
@@ -346,7 +369,7 @@ export function FeedPage() {
       {showAuthPrompt && (
         <AuthPromptModal
           onClose={() => setShowAuthPrompt(false)}
-          onRegister={() => { trackLead(); navigate('/register') }}
+          onRegister={() => { trackAuthPromptCtaClicked(interactedIds.current.size); navigate('/register', { state: { source: 'auth_prompt_modal' } }) }}
           onLogin={() => navigate('/login')}
         />
       )}
@@ -373,7 +396,13 @@ export function FeedPage() {
         />
       )}
 
-      {showInterestsModal && <InterestsModal onDone={() => setShowInterestsModal(false)} />}
+      {showTruequeGateModal && (
+        <TruequeGateModal
+          onClose={() => setShowTruequeGateModal(false)}
+          onAddBook={() => { setShowTruequeGateModal(false); navigate('/books/new') }}
+        />
+      )}
+
 
     </div>
     {!isGuest && (

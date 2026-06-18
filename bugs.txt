@@ -1,0 +1,918 @@
+En prod empece a dar dislikes a los libros que me aparecian en /feed progresivamente iban aumentando su distancia hacia los libros que quedaban mas
+lejos, pero sorpresivamente, empezaron a aparecer libros más cercanos (ya estaban cargados de antes hay que descartar que los hayan subido ahora)
+
+
+
+Adjunto la request y response que mostro los libros mas cercanos
+{
+    "books": [
+        {
+            "author": "Eduardo Galeano",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/215aeb38-d8f5-4d69-aa44-50fa07bfdbc4/1000060776.jpg",
+            "createdAt": "2026-06-08T22:57:38.780414",
+            "description": "En 'Mujeres', Eduardo Galeano rinde homenaje a las historias y luchas de mujeres de diferentes épocas y culturas, entrelazando su sabiduría y valentía con la prosa poética que lo caracteriza. A través de relatos emotivos y reflexiones profundas, el autor nos invita a redescubrir el poder femenino y la resistencia ante la adversidad. Este libro es un canto a la vida y un llamado a la memoria, donde cada página celebra la fortaleza y la diversidad de las mujeres en el mundo.",
+            "distanceKm": 2.411838993159942,
+            "genre": "NO_FICCION",
+            "id": "0a7b701b-6840-4cd4-88b5-1ec5a98b850b",
+            "owner": {
+                "city": "Distrito Ciudad de Godoy Cruz",
+                "id": "77e96951-4ec9-4b30-ba15-c25816344f06",
+                "name": "Analia",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Mujeres",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Martín Caparrós",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/6ac7b732-219a-48c2-97f9-36c2e013c708/1000060775.jpg",
+            "createdAt": "2026-06-08T22:54:30.476711",
+            "description": "En \"Valfierno\", Martín Caparrós teje una narrativa fascinante que explora la vida de uno de los personajes más enigmáticos de la historia del arte: el concepcionista detrás del famoso robo del cuadro de la Mona Lisa. Con una prosa envolvente, Caparrós nos invita a adentrarnos en un mundo de intriga, pasión y traición donde el arte y la historia se entrelazan de manera magistral. Un viaje literario que desafía nuestras nociones sobre la verdad y la estética.",
+            "distanceKm": 2.411838993159942,
+            "genre": "FICCION",
+            "id": "40201485-a54e-4fd2-9c8e-c2565377f07c",
+            "owner": {
+                "city": "Distrito Ciudad de Godoy Cruz",
+                "id": "77e96951-4ec9-4b30-ba15-c25816344f06",
+                "name": "Analia",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Valfierno",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Carlos Gorostiza",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/dfb6199a-a4ae-474f-9689-98677ec4999f/1000060801.jpg",
+            "createdAt": "2026-06-08T23:01:10.111086",
+            "description": "\"Vuelan las palomas\" de Carlos Gorostiza es una obra conmovedora que explora la complejidad de las relaciones humanas y la búsqueda de la libertad en un mundo lleno de limitaciones. A través de diálogos profundos y personajes entrañables, Gorostiza nos invita a reflexionar sobre los anhelos y sueños que nos impulsan a volar más alto. Esta novela es un canto a la esperanza que resuena en cada página.",
+            "distanceKm": 2.411838993159942,
+            "genre": "FICCION",
+            "id": "4fe027e4-e506-498c-934e-88da5a12dcbe",
+            "owner": {
+                "city": "Distrito Ciudad de Godoy Cruz",
+                "id": "77e96951-4ec9-4b30-ba15-c25816344f06",
+                "name": "Analia",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Vuelan las palomas",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Simone De Beauvoir",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/9ae7507d-ad57-48a1-9c25-8be5fdc18b4f/1000060802.jpg",
+            "createdAt": "2026-06-08T23:01:55.357314",
+            "description": "\"Memorias de una joven formal\" es una fascinante obra de Simone de Beauvoir que invita a los lectores a sumergirse en la vida de una mujer en la búsqueda de su identidad y libertad en un mundo lleno de convenciones. A través de su relato íntimo y reflexivo, Beauvoir comparte sus anhelos, luchas y el despertar de su pensamiento crítico, desafiando las normativas sociales de su tiempo. Este libro, que combina autobiografía y filosofía, es un viaje cautivador hacia la emancipación femenina y la autodeterminación.",
+            "distanceKm": 2.411838993159942,
+            "genre": "NO_FICCION",
+            "id": "742e201b-a931-4bdf-a648-aa671b849945",
+            "owner": {
+                "city": "Distrito Ciudad de Godoy Cruz",
+                "id": "77e96951-4ec9-4b30-ba15-c25816344f06",
+                "name": "Analia",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Memorias de una joven formal",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Jorge Edwards",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/7e303a47-ae27-47a4-80ee-fbbe5433a814/1000060803.jpg",
+            "createdAt": "2026-06-08T23:04:01.837102",
+            "description": "En \"La casa de Dostoievsky\", Jorge Edwards nos sumerge en un fascinante viaje a través de la vida y obra del célebre autor ruso, explorando su profunda influencia en la literatura y el pensamiento contemporáneo. A través de una prosa evocadora y reflexiva, el autor entrelaza su propia experiencia con el legado de Dostoievsky, creando un diálogo íntimo entre el pasado y el presente. Este libro es una invitación a descubrir no solo la genialidad del escritor, sino también la conexión humana que trasciende el tiempo y las fronteras.",
+            "distanceKm": 2.411838993159942,
+            "genre": "FICCION",
+            "id": "eac114e0-d541-4301-afc2-ed58dd0d0403",
+            "owner": {
+                "city": "Distrito Ciudad de Godoy Cruz",
+                "id": "77e96951-4ec9-4b30-ba15-c25816344f06",
+                "name": "Analia",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "La casa de Dostoiewsky",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Federico Falco",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/2af91d53-e249-437a-b71b-1c872ae99d6b/1000200026.jpg",
+            "createdAt": "2026-06-11T20:13:53.576925",
+            "description": "es una historia íntima sobre el duelo y la soledad. Narra la vida de un hombre que, tras una dolorosa separación, se aísla en el campo para intentar sanar. La trama transcurre a lo largo de varios meses y se centra en su nueva rutina: el cultivo de una huerta, la observación de la naturaleza y la escritura.A través de una narración fragmentada y superpuesta, la novela entrelaza tres ejes principales:El presente en la huerta: La lucha diaria con las plantas, las inclemencias del tiempo y el paso lento de las horas en el campo.El pasado y la memoria: Recuerdos de su infancia en la zona rural, su juventud en la ciudad y el quiebre de su relación amorosa con Ciro.La escritura: Reflexiones sobre el lenguaje, el proceso creativo y la necesidad humana de contar historias para darle sentido a lo que nos pasa.En definitiva, es una obra introspectiva y sutil que utiliza la metáfora de la tierra y la siembra para explorar el dolor, la reconstrucción personal y el paso del tiempo",
+            "distanceKm": 3.3358477993368876,
+            "genre": "OTROS",
+            "id": "815f7018-6a28-40fa-997a-08da4331b109",
+            "owner": {
+                "city": "Departamento Luján de Cuyo",
+                "id": "1e450911-b529-4571-bf12-a58b74b034a4",
+                "name": "Agustina",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIeD_aByonbe6Gjcl5IZr8l4QdO-PdryB46UlJq0rV_taJsqA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Los llanos ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "María García Esperón ",
+            "condition": "USADO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/71f5f795-f201-403c-af89-7a91bd410a64/1000200027.jpg",
+            "createdAt": "2026-06-11T20:03:58.907243",
+            "description": "Isabel vive en la Ciudad de México, está en 3° de secundaria y no sabe qué es lo bueno de tener 14 años. Pero al día que el profesor de español encarga como trabajo escolar que cada uno de los alumnos haga su propio árbol genealógico y revela sus compañeros que desciende de un emperador azteca Moctezuma, es cuando empiezan sus verdaderos problemas.\n\nTodos se burlan de ella excepto Francisco corta un chico español que resulta estar muy interesado en encontrar el códice perdido del emperador Moctezuma.",
+            "distanceKm": 3.3358477993368876,
+            "genre": "MISTERIO",
+            "id": "b3d690e4-9a2b-4466-8ac4-338b683c16bc",
+            "owner": {
+                "city": "Departamento Luján de Cuyo",
+                "id": "1e450911-b529-4571-bf12-a58b74b034a4",
+                "name": "Agustina",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIeD_aByonbe6Gjcl5IZr8l4QdO-PdryB46UlJq0rV_taJsqA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Mi abuelo Moctezuma ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Rosa Huertas ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/94847391-e6de-4ae0-890d-d8885dd5c6ac/1000200028.jpg",
+            "createdAt": "2026-06-11T20:10:44.952897",
+            "description": "¿Es posible que existan a un poema inéditos de Miguel Hernández? ¿Donde se esconderá el cuaderno en el que escribió sus últimos versos? \n\nClara y Víctor dos adolescentes intentarán hallar la respuesta a estas preguntas e iniciarán una búsqueda apasionante que le revelará mucho más de lo que pensaban. Conocerán la verdad que esconde la memoria de sus respectivos abuelos, y descubrirán el uno al otro y fracturarán fluctuarán entre la amistad y la desconfianza, la lealtad y la traición los sentimientos aflorarán siguiendo el rastro del poeta Cabrero.",
+            "distanceKm": 3.3358477993368876,
+            "genre": "POESIA",
+            "id": "dbb1569f-fc7d-4e0a-b956-42dba54ef293",
+            "owner": {
+                "city": "Departamento Luján de Cuyo",
+                "id": "1e450911-b529-4571-bf12-a58b74b034a4",
+                "name": "Agustina",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIeD_aByonbe6Gjcl5IZr8l4QdO-PdryB46UlJq0rV_taJsqA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Mala luna ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Julio Cortázar",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/6C63FF/white?text=Rayuela",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "La novela más importante de Cortázar. Ejemplar en muy buen estado.",
+            "distanceKm": 3.3606862912388547,
+            "genre": "Ficción",
+            "id": "20000001-0000-0000-0000-000000000001",
+            "owner": {
+                "city": "Maipú",
+                "id": "10000001-0000-0000-0000-000000000001",
+                "name": "Ana Rodríguez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Rayuela",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Ernesto Sábato",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://placehold.co/300x450/FF6584/white?text=El+Tunel",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Edición reciente, sin uso. Historia de obsesión y soledad.",
+            "distanceKm": 3.3606862912388547,
+            "genre": "Novela",
+            "id": "20000002-0000-0000-0000-000000000002",
+            "owner": {
+                "city": "Maipú",
+                "id": "10000001-0000-0000-0000-000000000001",
+                "name": "Ana Rodríguez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El túnel",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Paulo Coelho",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/e0053156-5dd2-45d8-b9ee-ea11a724bcd7/47491.png",
+            "createdAt": "2026-06-10T15:48:37.139426",
+            "description": "\"Brida\" de Paulo Coelho es una cautivadora novela que sigue el viaje espiritual de una joven irlandesa en busca de su identidad y su conexión con el mundo mágico que la rodea. A través de encuentros con maestros y místicos, Brida descubre el poder del amor, la sabiduría y la búsqueda del conocimiento interno. Esta historia poética invita al lector a explorar los misterios de la vida y el destino, resonando en lo más profundo del alma.",
+            "distanceKm": 3.575383023580509,
+            "genre": "ROMANCE",
+            "id": "b0f8870c-dc93-4ab6-81fa-91cf4ff2fcb1",
+            "owner": {
+                "city": "Departamento Maipú",
+                "id": "d858911f-7a7a-4f3a-993c-6ac1392ff02e",
+                "name": "Lucia Martinez",
+                "profilePictureUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/avatars/b309e371-6b3c-4660-8f5a-3a053bf41d57/47490.png"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Brida",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "María Martínez ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/d12eaafc-b548-4a3f-962c-dd859dab84dd/IMG_5548.jpeg",
+            "createdAt": "2026-06-17T01:47:05.478023",
+            "description": "El libro está en buen estado , solo cuenta con un par de frases subrayadas pero no afecta en nada la lectura . ",
+            "distanceKm": 4.345757337579841,
+            "genre": "JUVENIL",
+            "id": "3450b288-220f-4fd9-bc8f-34fd45578e5e",
+            "owner": {
+                "city": "Departamento Guaymallén",
+                "id": "ae9afb25-1c20-4146-8f90-7b3169f26a37",
+                "name": "Morena Martinoff",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Una canción para Novalie ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Scott fitzgerald",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/86c06b1e-b906-4ac4-8622-6a68a90993d4/Screenshot_20260615_140304_Gallery.jpg",
+            "createdAt": "2026-06-15T17:04:46.228726",
+            "description": "\"El gran Gatsby\" es una cautivadora novela ambientada en el esplendor de los años 20, que relata la vida del enigmático Jay Gatsby y su obsesión por el amor perdido de Daisy Buchanan. A través de los ojos del joven narrador Nick Carraway, Fitzgerald desentraña las ilusiones y desilusiones de la alta sociedad estadounidense, explorando temas de deseo, ambición y el sueño americano. Con su prosa evocadora y sus personajes memorables, este clásico literario se sumerge en la búsqueda de la felicidad en un mundo lleno de superficialidad y decadencia.",
+            "distanceKm": 4.345757337579841,
+            "genre": "ROMANCE",
+            "id": "9e013148-8fea-48b9-b0bf-3883f1afcff7",
+            "owner": {
+                "city": "Departamento Guaymallén",
+                "id": "d63c7949-763b-4535-a234-7ca7eb7273c7",
+                "name": "Erica ",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El gran gatsby",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Jorge Luis Borges",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/8E44AD/white?text=El+Aleph",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Cuentos fantásticos de Borges. Tapa blanda, buen estado.",
+            "distanceKm": 4.574258396249582,
+            "genre": "Ficción",
+            "id": "20000007-0000-0000-0000-000000000007",
+            "owner": {
+                "city": "Mendoza",
+                "id": "10000004-0000-0000-0000-000000000004",
+                "name": "Luis Martínez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El Aleph",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Ricardo Piglia",
+            "condition": "USADO",
+            "coverImageUrl": "https://placehold.co/300x450/27AE60/white?text=Respiracion",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Considerada la mejor novela de Piglia. Buen estado general.",
+            "distanceKm": 4.574258396249582,
+            "genre": "Novela",
+            "id": "20000008-0000-0000-0000-000000000008",
+            "owner": {
+                "city": "Mendoza",
+                "id": "10000004-0000-0000-0000-000000000004",
+                "name": "Luis Martínez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Respiración artificial",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Ernesto Sábato",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://placehold.co/300x450/E74C3C/white?text=Heroes",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Nueva edición con prólogo del autor. Sin estrenar.",
+            "distanceKm": 4.574258396249582,
+            "genre": "Novela",
+            "id": "20000009-0000-0000-0000-000000000009",
+            "owner": {
+                "city": "Mendoza",
+                "id": "10000004-0000-0000-0000-000000000004",
+                "name": "Luis Martínez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Sobre héroes y tumbas",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "John Kenneth Galbraith",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/ef490663-4340-411d-b719-f12012fed9c7/72132.jpg",
+            "createdAt": "2026-06-12T16:38:11.081083",
+            "description": "\"El dinero\" de John Kenneth Galbraith es una incisiva reflexión sobre el papel fundamental del dinero en la economía y en la sociedad moderna. Con un estilo claro y accesible, el autor desentraña las complejas relaciones entre el poder, la política y la riqueza, desafiando las nociones tradicionales sobre el valor y la inflación. Este libro es una lectura esencial para comprender no solo el dinero, sino también las dinámicas que lo rodean en nuestro mundo actual.",
+            "distanceKm": 4.8237595906149755,
+            "genre": "CIENCIAS",
+            "id": "063382ef-ff95-45af-aa76-cefa200ae804",
+            "owner": {
+                "city": "Departamento Guaymallén",
+                "id": "4d0f4ffa-7720-468f-8dc9-8ffda0c2f462",
+                "name": "Jonas",
+                "profilePictureUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/avatars/9d45c1f2-9961-4060-a824-ba97f9ee6236/15838.jpg"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El dinero",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Antonio Rolando Arenas",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/1193a309-4dc6-4d87-bc98-1a98a3b492d6/Interrogantes.jpg",
+            "createdAt": "2026-06-10T21:01:20.088851",
+            "description": "Pedilo por Whatsapp al 2615158308 - En 1987 surge este libro que recibió el título de Interrogantes y lo llevó a la imprenta de Oscar Rosas, en Godoy Cruz de Mendoza. Allí se imprimieron los 100 primeros ejemplares sin ISBN y ni registro de la propiedad intelectual, que el autor empezó rápidamente a ofrecer de mano en mano por las calles de la Ciudad de Mendoza. Escuchó comentarios de eventuales lectores que le ayudaron a realizar una corrección y en 1995 presentó el nuevo manuscrito a la editorial American International Publishers de Pennsylvania, USA. Se inició el proceso de publicación (bocetos de portada, reseña, maquetación...). Lamentablemente la editorial no pudo finalizar la edición ya que se presentó en concurso de acreedores y devolvió el material al autor. Un nuevo acuerdo con la Editorial Dunken de Buenos Aires, hizo realidad el trámite del registro de la propiedad intelectual y el ISBN, imprimiendo una discreta cantidad de ejemplares en una primera edición en 1999.",
+            "distanceKm": 5.256030238758402,
+            "genre": "JUVENIL",
+            "id": "d992212f-75a3-46e3-9f57-ecc6e8b04b10",
+            "owner": {
+                "city": "Departamento Guaymallén",
+                "id": "4e3bbf5c-fdee-45fe-b291-9e91b87fab84",
+                "name": "Antonio Rolando Arenas",
+                "profilePictureUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/avatars/99f51be5-3d61-4c30-bffc-7c5f898cc3c3/ARA_29Abril_2026.jpg"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Interrogantes",
+            "trueque": true,
+            "venta": true
+        },
+        {
+            "author": "Jane Corry",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/334db270-73f5-4731-8e68-98d720c62a8e/17810426615228639723547007855146.jpg",
+            "createdAt": "2026-06-09T22:07:14.996456",
+            "description": "Cdo la joven abogada Lily acepta su primer caso importante,  empieza a sentirse extrañamente atraída x su cliente ",
+            "distanceKm": 5.6375807867010375,
+            "genre": "FICCION",
+            "id": "1bae8c7d-83cf-4136-923b-135a9f553419",
+            "owner": {
+                "city": "Ciudad de Mendoza",
+                "id": "8c929a5c-4881-4504-afca-2165462790ae",
+                "name": "Alejandra ",
+                "profilePictureUrl": ""
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "La mujer de mi marido",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Wendy Higgins",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/f8d54fcd-e2c8-44e7-8dcc-78c8ace575d8/17810422309954155830438152006364.jpg",
+            "createdAt": "2026-06-09T22:00:02.475973",
+            "description": "La intriga política y el romance se potencianen una fantasía emocionante ",
+            "distanceKm": 5.6375807867010375,
+            "genre": "FANTASIA",
+            "id": "4f2d512e-adf4-49a9-9816-efdfc5a680ab",
+            "owner": {
+                "city": "Ciudad de Mendoza",
+                "id": "8c929a5c-4881-4504-afca-2165462790ae",
+                "name": "Alejandra ",
+                "profilePictureUrl": ""
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "La gran busqueda",
+            "trueque": true,
+            "venta": true
+        }
+    ],
+    "hasMore": true,
+    "nextPage": 1
+}
+
+
+Se puede observar que Mujeres de Eduardo Galeano esta a 2.411838993159942 km es considerablemente más cercano a los dos libros anteriores que aparecieron en el feed:
+
+
+
+Adjunto las requests anteriores:
+
+https://api.truequedelibros.com/books/075b6025-0698-419f-83ed-ee1160666a51/dislike
+https://api.truequedelibros.com/books/20000015-0000-0000-0000-000000000015/dislike
+https://api.truequedelibros.com/books/feed?page=3&lat=-32.93&lng=-68.84
+{"books":[],"hasMore":false,"nextPage":4}
+
+
+La última llamada a /feed que obtuvo datos:
+https://api.truequedelibros.com/books/feed?page=2&lat=-32.93&lng=-68.84
+{
+    "books": [
+        {
+            "author": "Aldous Huxley",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/3498DB/white?text=Mundo+Feliz",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Distopía clásica. Tapa blanda, subrayado en los primeros capítulos.",
+            "distanceKm": 11.060258692637259,
+            "genre": "Ciencia Ficción",
+            "id": "20000010-0000-0000-0000-000000000010",
+            "owner": {
+                "city": "Las Heras",
+                "id": "10000005-0000-0000-0000-000000000005",
+                "name": "Sofía Díaz",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Un mundo feliz",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Umberto Eco",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/795548/white?text=Rosa",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Novela histórica y policial. Muy buen estado.",
+            "distanceKm": 11.060258692637259,
+            "genre": "Policial",
+            "id": "20000011-0000-0000-0000-000000000011",
+            "owner": {
+                "city": "Las Heras",
+                "id": "10000005-0000-0000-0000-000000000005",
+                "name": "Sofía Díaz",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El nombre de la rosa",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Roberto Arlt",
+            "condition": "USADO",
+            "coverImageUrl": "https://placehold.co/300x450/FF7043/white?text=Siete+Locos",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Edición vintage de los 70s. Algunas páginas amarillentas.",
+            "distanceKm": 15.521001423974724,
+            "genre": "Novela",
+            "id": "20000012-0000-0000-0000-000000000012",
+            "owner": {
+                "city": "Luján de Cuyo",
+                "id": "10000006-0000-0000-0000-000000000006",
+                "name": "Diego Pérez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Los siete locos",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Manuel Puig",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://placehold.co/300x450/AB47BC/white?text=Rita+Hayworth",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Primera novela de Puig. Recién comprada, sin leer.",
+            "distanceKm": 15.521001423974724,
+            "genre": "Novela",
+            "id": "20000013-0000-0000-0000-000000000013",
+            "owner": {
+                "city": "Luján de Cuyo",
+                "id": "10000006-0000-0000-0000-000000000006",
+                "name": "Diego Pérez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "La traición de Rita Hayworth",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Iván Mourin ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/32ad17ab-d344-4371-a450-4386749136b5/image.jpg",
+            "createdAt": "2026-06-10T20:30:53.397999",
+            "description": "En \"Resurrección\", Iván Mourin nos sumerge en un profundo viaje emocional donde los límites entre la vida y la muerte se desdibujan. A través de personajes complejos y una prosa cautivadora, se exploran los temas de la redención, el amor y la búsqueda de sentido en un mundo caótico. Esta obra es una reflexión poderosa sobre las segundas oportunidades y la transformación personal.",
+            "distanceKm": 17.318665755331306,
+            "genre": "TERROR",
+            "id": "11583da7-f910-49f9-a4bc-1e061560bac9",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Resurrección ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Mary Kay Simmons ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/c8850746-90a6-403a-980d-401a64d66d0c/image.jpg",
+            "createdAt": "2026-06-10T20:30:19.082455",
+            "description": "Sumérgete en un fascinante mundo de intriga y romance con \"Los diamantes de Alcázar\" de Mary Kay Simmons. Esta cautivadora novela te llevará a través de oscuros secretos familiares y pasiones ocultas, mientras sus personajes luchan por desentrañar la verdad detrás de un valioso legado. ¿Estás listo para descubrir qué brillantes sorpresas aguardan entre las páginas?",
+            "distanceKm": 17.318665755331306,
+            "genre": "ROMANCE",
+            "id": "35873d39-cfc7-4306-a5a1-c48f6fab7f57",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Los diamantes de Alcazar ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Patrick Suskind ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/838f882e-708b-46b0-a9fd-19f46547f1c4/image.jpg",
+            "createdAt": "2026-06-10T20:28:33.227343",
+            "description": " sumergido en el París del siglo XVIII, \"El perfume\" de Patrick Süskind narra la vida de Jean-Baptiste Grenouille, un huérfano con un sentido del olfato extraordinario y una obsesión desmedida por crear el perfume perfecto. A medida que su búsqueda lo lleva a cometer actos atroces, el lector se adentra en un oscuro viaje de obsesión, soledad y la esencia misma de la humanidad. Una obra fascinante que explora el poder y los peligros de la creación artística y la ambición desmedida.",
+            "distanceKm": 17.318665755331306,
+            "genre": "MISTERIO",
+            "id": "54f89090-85d6-4970-b6b6-dded4c996c2a",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El perfume ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Robin Cook ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/51c6896a-42c3-4420-9b49-f7ad7c235ab9/image.jpg",
+            "createdAt": "2026-06-10T20:27:53.18481",
+            "description": "En \"Como si fuera Dios\", Robin Cook nos sumerge en una fascinante trama donde la ética médica y la ambición se entrelazan en un mundo de avances biotecnológicos. A medida que un grupo de científicos se enfrenta a decisiones morales que desafían los límites de la humanidad, la suspense y la intriga te mantendrán al borde de tu asiento. Una historia cautivadora que invita a reflexionar sobre el poder de la ciencia y las consecuencias de jugar a ser Dios.",
+            "distanceKm": 17.318665755331306,
+            "genre": "TERROR",
+            "id": "67333c4a-78ad-46b3-9998-12b54190101f",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Como si fuera Dios ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Louis Aunchincloss ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/89e06683-7593-4ff0-940a-4b38fd477d72/image.jpg",
+            "createdAt": "2026-06-10T20:29:11.46307",
+            "description": "En 'La intrigante', Louis Auchincloss teje un fascinante retrato de la alta sociedad neoyorquina, donde ambición y secretos se entrelazan en un juego de poder y seducción. A través de personajes complejos y diálogos agudos, el autor revela las sutilezas del comportamiento humano y las dinámicas ocultas entre las élites. Este cautivador relato es una exploración profunda de la moralidad y el deseo en un mundo donde cada sonrisa puede esconder una intención oscura.",
+            "distanceKm": 17.318665755331306,
+            "genre": "MISTERIO",
+            "id": "78569b69-779d-4ef3-8dd6-dfcdb9714326",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "La intrigante",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Robert Bloch ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/c7964f60-dd8e-4b51-8281-ffd0816c2f18/image.jpg",
+            "createdAt": "2026-06-10T20:29:44.106899",
+            "description": "Adéntrate en un oscuro laberinto de terror psicológico con \"Psicosis II\" de Robert Bloch, donde los secretos más inquietantes resurgen y las sombras del pasado atormentan a sus protagonistas. La historia, atrapante y perturbadora, explora la delgada línea entre la locura y la cordura, dejando al lector al borde del asiento. Una secuela que profundiza en los miedos humanos y la complejidad del alma, garantizando un escalofrío en cada página.",
+            "distanceKm": 17.318665755331306,
+            "genre": "MISTERIO",
+            "id": "a2060ab8-5c29-44fb-bca3-e9d1088ec1b5",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "PsicosisII ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Peter Benchley ",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/90974aaa-34ff-464f-b6ef-b92886e41595/image.jpg",
+            "createdAt": "2026-06-10T20:24:48.00487",
+            "description": "Sumérgete en \"Isla\" de Peter Benchley, una cautivadora novela que te llevará a un misterioso paraíso en el que la belleza oculta peligros inimaginables. Acompaña a un grupo de exploradores en su búsqueda de tesoros y secretos, mientras descubren un mundo donde la avaricia y la supervivencia chocan en una intensa batalla. Con un estilo narrativo envolvente, Benchley te atrapará en esta inolvidable aventura que combina emoción y reflexión sobre la naturaleza humana.",
+            "distanceKm": 17.318665755331306,
+            "genre": "TERROR",
+            "id": "e902fc11-edc9-45b2-8b69-4ecb0909f886",
+            "owner": {
+                "city": "Distrito Perdriel",
+                "id": "a80811ad-2455-46db-bf26-65460abfe6e0",
+                "name": "Luciano Luconi",
+                "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocJetrV0w_GSGxOyhPq_ue8p4-_8ooBy-lNmH0iVudBgPIIcfA=s96-c"
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Isla ",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Mariano",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/c625e7f1-5771-4834-8bd3-c912e63e3ef7/IMG_20260607_123618833.jpg",
+            "createdAt": "2026-06-16T19:09:27.845476",
+            "description": "Descubre el fascinante mundo de la comunicación en 'El poder de las palabras' de Mariano, donde cada frase se convierte en una herramienta transformadora. A través de relatos cautivadores y reflexiones profundas, el autor revela cómo las palabras pueden cambiar realidades y construir puentes entre las personas. Una lectura imprescindible que te inspirará a utilizar tu voz de manera consciente y efectiva.",
+            "distanceKm": 18.579031342351712,
+            "genre": "AUTOAYUDA",
+            "id": "668d2dbd-c2b7-4811-b770-55d64f99bd0e",
+            "owner": {
+                "city": "Departamento Maipú",
+                "id": "4e90d590-6bae-418e-bc0d-8d434291d06c",
+                "name": "Carlos ",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El poder de las palabras",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Vargas Llosa",
+            "condition": "NUEVO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/615b84de-54ec-4eb7-80e5-53090c0883d7/1000276223.jpg",
+            "createdAt": "2026-06-08T09:20:01.603017",
+            "description": null,
+            "distanceKm": 30.66640067048637,
+            "genre": null,
+            "id": "f7301b4c-117f-4b72-89f9-7e2c09df590f",
+            "owner": {
+                "city": "Distrito Palmira",
+                "id": "6ce9aead-ed73-4761-a122-35c522faa665",
+                "name": "Lorena Godoy",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El pez en el agua",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Gabriel Rolon",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/default/book-cover.png",
+            "createdAt": "2026-06-13T15:33:16.485577",
+            "description": "\"Encuentros (el lado B del amor)\" de Gabriel Rolón nos sumerge en un viaje emocional donde el amor se muestra en su faceta más cruda y auténtica. A través de relatos intensos y conmovedores, el autor explora las complejidades de las relaciones humanas, desafiando nuestras percepciones sobre la intimidad y el deseo. Un libro que invita a la reflexión y a reencontrarse con los matices del corazón.",
+            "distanceKm": 39.64892082083198,
+            "genre": "PSICOLOGIA",
+            "id": "15d6fd19-ef99-41b7-9cd4-f55cfbe312a7",
+            "owner": {
+                "city": "Distrito Ciudad de San Martín",
+                "id": "dbb38afd-e2ac-4120-942c-409cfa3ddea6",
+                "name": "Claudia Valdez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Encuentros (el lado B del amor)",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Bernardo Stemateas",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/default/book-cover.png",
+            "createdAt": "2026-06-13T15:29:51.241531",
+            "description": "En \"Quiero un cambio\", Bernardo Stemateas nos invita a emprender un viaje transformador hacia la búsqueda del bienestar y la realización personal. Con su estilo inspirador y práctico, ofrece herramientas poderosas para superar obstáculos y fomentar un crecimiento auténtico. Este libro es una guía esencial para quienes desean dar un giro significativo en sus vidas y alcanzar sus sueños.",
+            "distanceKm": 39.64892082083198,
+            "genre": "AUTOAYUDA",
+            "id": "4ce7b53c-25e8-4abe-979e-a6c0818fa9a4",
+            "owner": {
+                "city": "Distrito Ciudad de San Martín",
+                "id": "dbb38afd-e2ac-4120-942c-409cfa3ddea6",
+                "name": "Claudia Valdez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Quiero un cambio",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Colette Dowling",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/default/book-cover.png",
+            "createdAt": "2026-06-13T15:31:17.345012",
+            "description": "En \"El complejo de Cenicienta\", Colette Dowling explora las profundidades del complejo de inseguridad que afecta a las mujeres, revelando cómo la búsqueda de aprobación y el miedo a la independencia pueden limitar su potencial. A través de un análisis perspicaz y emocional, la autora invita a las lectoras a liberarse de las ataduras de los mitos románticos y a abrazar su verdadero poder. Un viaje transformador hacia la autoconfianza y la autenticidad que resonará en cada mujer.",
+            "distanceKm": 39.64892082083198,
+            "genre": "AUTOAYUDA",
+            "id": "6047d397-e1f9-4ed5-8ea7-79ef7739d922",
+            "owner": {
+                "city": "Distrito Ciudad de San Martín",
+                "id": "dbb38afd-e2ac-4120-942c-409cfa3ddea6",
+                "name": "Claudia Valdez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El complejo de cenicienta",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Isabel Allende",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/default/book-cover.png",
+            "createdAt": "2026-06-13T15:28:05.392082",
+            "description": "Ines Suarez es una joven y humilde costurera que se embarca hacia un nuevo mundo, para buscar a su marido, extraviado con sus sueños de gloria al otro lado del atlántico.",
+            "distanceKm": 39.64892082083198,
+            "genre": "HISTORIA",
+            "id": "b60ee43f-d3b8-4f75-af88-fdc11bc3f478",
+            "owner": {
+                "city": "Distrito Ciudad de San Martín",
+                "id": "dbb38afd-e2ac-4120-942c-409cfa3ddea6",
+                "name": "Claudia Valdez",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Inés del alma mia",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Roberto Arlt",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/26A69A/white?text=Juguete",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Primera novela de Arlt. Muy buen estado, pocos años de uso.",
+            "distanceKm": 193.7404391367135,
+            "genre": "Novela",
+            "id": "20000014-0000-0000-0000-000000000014",
+            "owner": {
+                "city": "San Rafael",
+                "id": "10000007-0000-0000-0000-000000000007",
+                "name": "Valentina López",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "El juguete rabioso",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Mary Shelley",
+            "condition": "BUENO",
+            "coverImageUrl": "https://placehold.co/300x450/546E7A/white?text=Frankenstein",
+            "createdAt": "2026-06-05T20:44:37.447009",
+            "description": "Edición ilustrada. Tapa dura con pequeña raspadura.",
+            "distanceKm": 193.7404391367135,
+            "genre": "Ciencia Ficción",
+            "id": "20000015-0000-0000-0000-000000000015",
+            "owner": {
+                "city": "San Rafael",
+                "id": "10000007-0000-0000-0000-000000000007",
+                "name": "Valentina López",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Frankenstein",
+            "trueque": true,
+            "venta": false
+        },
+        {
+            "author": "Kazuo Ishiguro",
+            "condition": "BUENO",
+            "coverImageUrl": "https://trueque-de-libros-books-media.s3.us-east-1.amazonaws.com/books/62b9f9c8-3650-4d9d-90f2-42233892e3a6/1000166214.jpg",
+            "createdAt": "2026-06-14T18:20:11.443285",
+            "description": "Novela narrada desde el punto de vista de Klara una Amiga Artificial que se hace cuestionamientos muy humanos. Cómo nuevo.",
+            "distanceKm": 671.0878116348623,
+            "genre": "CIENCIA_FICCION",
+            "id": "075b6025-0698-419f-83ed-ee1160666a51",
+            "owner": {
+                "city": "Municipio de Plottier",
+                "id": "43ab849d-d053-4f48-a338-0dd3c893a0a9",
+                "name": "Silvina",
+                "profilePictureUrl": null
+            },
+            "precio": null,
+            "regalo": false,
+            "status": "AVAILABLE",
+            "title": "Klara y el Sol",
+            "trueque": true,
+            "venta": false
+        }
+    ],
+    "hasMore": true,
+    "nextPage": 3
+}
+
+
+Se puede observar que los resultados de esta response por alguna razon no incluyo a Mujeres de Eduardo Galeano antes que "Klara y el Sol"
+a 671.0878116348623

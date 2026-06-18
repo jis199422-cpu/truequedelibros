@@ -38,6 +38,8 @@ const useLikeGateStore = create(
           }
         }),
 
+      setHasBooks: (value) => set({ hasBooks: value }),
+
       markWarningShown: (userId) =>
         set((s) => ({ warningShown: { ...s.warningShown, [userId]: true } })),
     }),

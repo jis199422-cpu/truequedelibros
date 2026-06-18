@@ -10,6 +10,7 @@ import com.jis.truequedelibros.conversation.websocket.PresenceService;
 import com.jis.truequedelibros.storage.S3StorageService;
 import com.jis.truequedelibros.user.domain.User;
 import com.jis.truequedelibros.user.dto.LocationRequest;
+import com.jis.truequedelibros.user.dto.OnboardingRequest;
 import com.jis.truequedelibros.user.dto.PublicProfileResponse;
 import com.jis.truequedelibros.user.dto.UpdateUserRequest;
 import com.jis.truequedelibros.user.service.UserService;
@@ -62,13 +63,17 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<PublicProfileResponse> getPublicProfile(@PathVariable UUID userId) {
-        return ResponseEntity.ok(userService.getPublicProfile(userId));
+    public ResponseEntity<PublicProfileResponse> getPublicProfile(
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.getPublicProfile(userId, user.getId()));
     }
 
     @GetMapping("/{userId}/books")
-    public ResponseEntity<List<BookResponse>> getUserBooks(@PathVariable UUID userId) {
-        return ResponseEntity.ok(bookService.getByOwner(userId));
+    public ResponseEntity<List<BookResponse>> getUserBooks(
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(bookService.getByOwner(userId, user.getId()));
     }
 
     @GetMapping("/{userId}/online")
@@ -82,6 +87,13 @@ public class UserController {
             @AuthenticationPrincipal User user) {
         userService.saveSubscriptionInterest(user.getId(), Boolean.TRUE.equals(body.get("interested")));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/onboarding")
+    public ResponseEntity<UserResponse> saveOnboarding(
+            @Valid @RequestBody OnboardingRequest request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.saveOnboarding(user.getId(), request.getIntent(), request.getCustomIntent()));
     }
 
 }

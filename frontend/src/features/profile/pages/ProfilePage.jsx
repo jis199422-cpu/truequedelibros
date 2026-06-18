@@ -7,6 +7,7 @@ import { updateBook, deleteBook } from '../../../shared/api/books.api'
 import { getWishlist, addToWishlist, removeFromWishlist } from '../../../shared/api/wishlist.api'
 import { startBookConversation } from '../../../shared/api/conversations.api'
 import { logout } from '../../../shared/api/auth.api'
+import { trackWishlistItemAdded } from '../../../shared/utils/metaPixel'
 import { useLikeBook } from '../../books/hooks/useLikeBook'
 import { MatchModal } from '../../feed/components/MatchModal'
 import { Spinner } from '../../../shared/components/Spinner'
@@ -104,6 +105,7 @@ export function ProfilePage() {
         <OwnProfileTabs
           books={profile.books ?? []}
           navigate={navigate}
+          onboardingIntent={currentUser?.onboardingIntent}
         />
       ) : (
         <OtherUserBooks name={profile.name} books={profile.books ?? []} />
@@ -112,7 +114,7 @@ export function ProfilePage() {
   )
 }
 
-function OwnProfileTabs({ books: initialBooks, navigate }) {
+function OwnProfileTabs({ books: initialBooks, navigate, onboardingIntent }) {
   const [activeTab, setActiveTab] = useState('books')
   const [books, setBooks] = useState(initialBooks)
   const [bannerDismissed, setBannerDismissed] = useState(false)
@@ -175,6 +177,11 @@ function OwnProfileTabs({ books: initialBooks, navigate }) {
           {books.length === 0 ? (
             <div className="placeholder-page" style={{ height: '40dvh' }}>
               <h2>Aún no tienes libros</h2>
+              <p>
+                {onboardingIntent === 'INTERCAMBIAR'
+                  ? 'Estás a un paso de empezar a hacer trueques. Subí el libro que querés intercambiar.'
+                  : 'Agregá tus libros para vender, regalar o intercambiar.'}
+              </p>
               <button className="btn btn-primary btn-sm" style={{ marginTop: '0.75rem', width: 'auto' }}
                 onClick={() => navigate('/books/new')}>
                 Agregar libro
@@ -189,6 +196,9 @@ function OwnProfileTabs({ books: initialBooks, navigate }) {
                 <div className="my-book-info">
                   <p className="my-book-title">{book.title}</p>
                   <p className="my-book-author">{book.author}</p>
+                  {book.description && (
+                    <p className="book-card-description">{book.description}</p>
+                  )}
                   <div className="my-book-meta">
                     <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
                     <span className={`status-chip status-${book.status}`}>
@@ -251,6 +261,7 @@ function WishlistTab() {
     setAdding(true)
     try {
       const { data } = await addToWishlist(title)
+      trackWishlistItemAdded({ bookTitle: title, source: 'profile' })
       setItems((prev) => [data, ...prev])
       setInput('')
       inputRef.current?.focus()
@@ -317,14 +328,25 @@ function OtherUserBooks({ name, books }) {
   const navigate = useNavigate()
   const { handleLike, match, clearMatch, liking } = useLikeBook()
   const [chattingId, setChattingId] = useState(null)
+  const [detailBook, setDetailBook] = useState(null)
+  const [likedIds, setLikedIds] = useState(
+    () => new Set(books.filter((b) => b.likedByCurrentUser).map((b) => b.id))
+  )
 
   const availableBooks = books.filter(b => b.status === 'AVAILABLE')
+
+  const handleLikeClick = (book) => {
+    setLikedIds((prev) => new Set(prev).add(book.id))
+    handleLike(book)
+  }
 
   const handleChat = async (book) => {
     setChattingId(book.id)
     try {
       const { data } = await startBookConversation(book.id)
-      navigate(`/chat/${data.conversationId}`)
+      navigate(`/chat/${data.conversationId}`, {
+        state: { bookHint: { ownerName: name, isVenta: book.venta, isRegalo: book.regalo } },
+      })
     } catch {
       toast.error('Error al iniciar el chat')
     } finally {
@@ -350,9 +372,11 @@ function OtherUserBooks({ name, books }) {
               <BookCard
                 key={book.id}
                 book={book}
-                onLike={!isChatBook ? () => handleLike(book) : undefined}
+                onOpenDetail={() => setDetailBook(book)}
+                onLike={!isChatBook ? () => handleLikeClick(book) : undefined}
                 onChat={isChatBook ? () => handleChat(book) : undefined}
                 liking={liking}
+                liked={likedIds.has(book.id)}
                 chatting={chattingId === book.id}
               />
             )
@@ -366,6 +390,9 @@ function OtherUserBooks({ name, books }) {
           onClose={clearMatch}
         />
       )}
+      {detailBook && (
+        <BookDescriptionModal book={detailBook} onClose={() => setDetailBook(null)} />
+      )}
     </>
   )
 }
@@ -374,15 +401,18 @@ function Avatar({ name, url }) {
   return <UserAvatar name={name} url={url} seed={name} />
 }
 
-function BookCard({ book, onLike, onChat, liking, chatting }) {
+function BookCard({ book, onOpenDetail, onLike, onChat, liking, liked, chatting }) {
   return (
-    <div className="book-card">
+    <div className="book-card" onClick={onOpenDetail} style={onOpenDetail ? { cursor: 'pointer' } : undefined}>
       <div className="book-card-cover">
         {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} /> : <span>📚</span>}
       </div>
       <div className="book-card-body">
         <p className="book-card-title">{book.title}</p>
         <p className="book-card-author">{book.author}</p>
+        {book.description && (
+          <p className="book-card-description">{book.description}</p>
+        )}
         <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
         {(book.trueque || book.regalo || book.venta) && (
           <div className="card-exchange-pills">
@@ -396,16 +426,20 @@ function BookCard({ book, onLike, onChat, liking, chatting }) {
         )}
       </div>
       {(onLike || onChat) && (
-        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
           {onLike && (
-            <button
-              className="btn btn-primary btn-sm"
-              style={{ flex: 1 }}
-              onClick={onLike}
-              disabled={liking}
-            >
-              ♥ Me gusta
-            </button>
+            liked ? (
+              <span className="liked-badge" style={{ flex: 1 }}>♥ Ya te gusta</span>
+            ) : (
+              <button
+                className="btn btn-primary btn-sm"
+                style={{ flex: 1 }}
+                onClick={onLike}
+                disabled={liking}
+              >
+                ♥ Me gusta
+              </button>
+            )
           )}
           {onChat && (
             <button
@@ -419,6 +453,43 @@ function BookCard({ book, onLike, onChat, liking, chatting }) {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function BookDescriptionModal({ book, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="book-detail-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={book.title}
+    >
+      <div className="book-detail-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="book-detail-drag-handle" />
+        <div className="book-detail-cover">
+          {book.coverImageUrl
+            ? <img src={book.coverImageUrl} alt={book.title} />
+            : <span className="book-detail-cover-placeholder">📚</span>}
+        </div>
+        <div className="book-detail-body">
+          <h2 className="book-detail-title">{book.title}</h2>
+          <p className="book-detail-author">{book.author}</p>
+          {book.description && (
+            <div className="book-detail-description-section">
+              <p className="book-detail-description-label">Descripción</p>
+              <p className="book-detail-description">{book.description}</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

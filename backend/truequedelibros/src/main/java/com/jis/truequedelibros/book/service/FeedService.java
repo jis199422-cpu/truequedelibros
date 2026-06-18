@@ -3,6 +3,7 @@ package com.jis.truequedelibros.book.service;
 import com.jis.truequedelibros.book.domain.BookStatus;
 import com.jis.truequedelibros.book.dto.BookResponse;
 import com.jis.truequedelibros.book.repository.BookRepository;
+import com.jis.truequedelibros.user.domain.OnboardingIntent;
 import com.jis.truequedelibros.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,19 +12,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class FeedService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final UUID NO_EXCLUSIONS_SENTINEL = new UUID(0L, 0L);
 
     private final BookRepository bookRepository;
     private final BookService bookService;
 
     @Transactional(readOnly = true)
-    public FeedPage getFeed(User user, int page, String genre, Double overrideLat, Double overrideLng) {
-        PageRequest pageable = PageRequest.of(page, DEFAULT_PAGE_SIZE);
+    public FeedPage getFeed(User user, List<UUID> excludeIds, String genre, Double overrideLat, Double overrideLng) {
+        PageRequest pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+        List<UUID> exclusions = (excludeIds == null || excludeIds.isEmpty())
+                ? List.of(NO_EXCLUSIONS_SENTINEL)
+                : excludeIds;
         boolean hasGenre = genre != null && !genre.isBlank();
 
         Double effectiveLat = overrideLat != null ? overrideLat
@@ -32,39 +38,49 @@ public class FeedService {
                 : (user != null ? user.getLongitude() : null);
 
         Page<com.jis.truequedelibros.book.domain.Book> result;
+        boolean filterTrueque = false;
 
         if (user == null) {
             if (effectiveLat != null && effectiveLng != null) {
                 result = hasGenre
-                        ? bookRepository.findFeedGuestByProximityAndGenre(effectiveLat, effectiveLng, genre, pageable)
-                        : bookRepository.findFeedGuestByProximity(effectiveLat, effectiveLng, pageable);
+                        ? bookRepository.findFeedGuestByProximityAndGenre(effectiveLat, effectiveLng, genre, exclusions, pageable)
+                        : bookRepository.findFeedGuestByProximity(effectiveLat, effectiveLng, exclusions, pageable);
             } else {
                 result = hasGenre
-                        ? bookRepository.findFeedGuestAndGenre(genre, pageable)
-                        : bookRepository.findFeedGuest(pageable);
+                        ? bookRepository.findFeedGuestAndGenre(genre, exclusions, pageable)
+                        : bookRepository.findFeedGuest(exclusions, pageable);
             }
         } else {
-            boolean noBooks = !bookRepository.existsByOwner_IdAndStatus(user.getId(), BookStatus.AVAILABLE);
+            // INTERCAMBIAR siempre ve todo (el modal en el feed actúa como gate).
+            // El resto de intenciones solo ve libros de trueque si tiene un libro propio
+            // disponible marcado como trueque.
+            if (user.getOnboardingIntent() == OnboardingIntent.INTERCAMBIAR) {
+                filterTrueque = false;
+            } else {
+                boolean hasAvailableTruequeBook = bookRepository.existsByOwner_IdAndStatusAndTrueque(
+                        user.getId(), BookStatus.AVAILABLE, true);
+                filterTrueque = !hasAvailableTruequeBook;
+            }
             if (effectiveLat != null && effectiveLng != null) {
-                result = noBooks
+                result = filterTrueque
                         ? (hasGenre
                             ? bookRepository.findFeedByProximityAndGenreNoTrueque(
-                                    user.getId(), effectiveLat, effectiveLng, genre, pageable)
+                                    user.getId(), effectiveLat, effectiveLng, genre, exclusions, pageable)
                             : bookRepository.findFeedByProximityNoTrueque(
-                                    user.getId(), effectiveLat, effectiveLng, pageable))
+                                    user.getId(), effectiveLat, effectiveLng, exclusions, pageable))
                         : (hasGenre
                             ? bookRepository.findFeedByProximityAndGenre(
-                                    user.getId(), effectiveLat, effectiveLng, genre, pageable)
+                                    user.getId(), effectiveLat, effectiveLng, genre, exclusions, pageable)
                             : bookRepository.findFeedByProximity(
-                                    user.getId(), effectiveLat, effectiveLng, pageable));
+                                    user.getId(), effectiveLat, effectiveLng, exclusions, pageable));
             } else {
-                result = noBooks
+                result = filterTrueque
                         ? (hasGenre
-                            ? bookRepository.findFeedBasicAndGenreNoTrueque(user.getId(), genre, pageable)
-                            : bookRepository.findFeedBasicNoTrueque(user.getId(), pageable))
+                            ? bookRepository.findFeedBasicAndGenreNoTrueque(user.getId(), genre, exclusions, pageable)
+                            : bookRepository.findFeedBasicNoTrueque(user.getId(), exclusions, pageable))
                         : (hasGenre
-                            ? bookRepository.findFeedBasicAndGenre(user.getId(), genre, pageable)
-                            : bookRepository.findFeedBasic(user.getId(), pageable));
+                            ? bookRepository.findFeedBasicAndGenre(user.getId(), genre, exclusions, pageable)
+                            : bookRepository.findFeedBasic(user.getId(), exclusions, pageable));
             }
         }
 
@@ -84,7 +100,11 @@ public class FeedService {
                 })
                 .toList();
 
-        return new FeedPage(books, result.hasNext(), page + 1);
+        long truequeOnlyCount = (user != null && filterTrueque)
+                ? bookRepository.countFeedTruequeOnly(user.getId())
+                : 0;
+
+        return new FeedPage(books, result.hasNext(), truequeOnlyCount);
     }
 
     private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
@@ -96,5 +116,5 @@ public class FeedService {
         return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    public record FeedPage(List<BookResponse> books, boolean hasMore, int nextPage) {}
+    public record FeedPage(List<BookResponse> books, boolean hasMore, long truequeOnlyCount) {}
 }

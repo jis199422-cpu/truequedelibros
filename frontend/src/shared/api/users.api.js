@@ -9,6 +9,9 @@ export const getUserOnlineStatus = (userId) => client.get(`/users/${userId}/onli
 export const saveSubscriptionInterest = (interested) =>
   client.post('/users/me/subscription-interest', { interested })
 
+export const saveOnboarding = (intent, customIntent) =>
+  client.post('/users/me/onboarding', { intent, customIntent })
+
 export const uploadToS3 = (uploadUrl, file) =>
   fetch(uploadUrl, {
     method: 'PUT',

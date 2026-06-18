@@ -4,6 +4,7 @@ import { AuthLayout } from '../components/AuthLayout'
 import { Logo } from '../../../shared/components/Logo'
 import { Spinner } from '../../../shared/components/Spinner'
 import { verifyEmail } from '../../../shared/api/auth.api'
+import { trackRegistrationCompleted } from '../../../shared/utils/metaPixel'
 
 export function VerifyEmailPage() {
   const [params] = useSearchParams()
@@ -23,7 +24,13 @@ export function VerifyEmailPage() {
     }
 
     verifyEmail(token)
-      .then(({ data }) => { setMessage(data.message); setStatus('success') })
+      .then(({ data }) => {
+        setMessage(data.message)
+        setStatus('success')
+        const source = localStorage.getItem('pendingRegistrationSource') ?? 'direct'
+        localStorage.removeItem('pendingRegistrationSource')
+        trackRegistrationCompleted({ authMethod: 'email', source })
+      })
       .catch((err) => {
         setMessage(err.response?.data?.error || 'El enlace es inválido o ha expirado.')
         setStatus('error')

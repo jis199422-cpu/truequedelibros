@@ -3,11 +3,13 @@ import toast from 'react-hot-toast'
 import { likeBook } from '../../../shared/api/books.api'
 import useAuthStore from '../../auth/store/authStore'
 import useLikeGateStore from '../../feed/store/likeGateStore'
+import { trackMatchCreated } from '../../../shared/utils/metaPixel'
 
 export function useLikeBook() {
   const currentUser = useAuthStore((s) => s.user)
   const { dailyCount, dailyLimit, isPremium, hasBooks, warningShown, incrementCount, markWarningShown } = useLikeGateStore()
   const [match, setMatch] = useState(null)
+  const [directContact, setDirectContact] = useState(null)
   const [liking, setLiking] = useState(false)
   const [gateModal, setGateModal] = useState(null)
 
@@ -28,6 +30,9 @@ export function useLikeBook() {
       const { data } = await likeBook(book.id)
       if (data.matched) {
         setMatch({ book, conversationId: data.conversationId })
+        trackMatchCreated({ bookTitle: book.title, bookGenre: book.genre, ownerUserId: book.owner?.id, conversationId: data.conversationId })
+      } else if (data.directContact) {
+        setDirectContact({ conversationId: data.conversationId })
       }
 
       if (userId && !premium) {
@@ -53,6 +58,8 @@ export function useLikeBook() {
         }
       } else if (msg === 'Ya diste like a este libro') {
         toast('Ya le habías dado like a este libro', { icon: 'ℹ️' })
+      } else if (msg === 'Necesitás tener al menos un libro disponible para trueque para dar like a este libro') {
+        toast.error(msg)
       } else {
         toast.error('Error al dar like')
       }
@@ -62,8 +69,9 @@ export function useLikeBook() {
   }
 
   const clearMatch = () => setMatch(null)
+  const clearDirectContact = () => setDirectContact(null)
   const clearGateModal = () => setGateModal(null)
   const markWarning = () => { if (currentUser?.id) markWarningShown(currentUser.id) }
 
-  return { handleLike, match, clearMatch, liking, gateModal, clearGateModal, markWarning }
+  return { handleLike, match, clearMatch, directContact, clearDirectContact, liking, gateModal, clearGateModal, markWarning }
 }

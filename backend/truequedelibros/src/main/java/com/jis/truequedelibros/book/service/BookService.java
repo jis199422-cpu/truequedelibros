@@ -1,5 +1,6 @@
 package com.jis.truequedelibros.book.service;
 
+import com.jis.truequedelibros.analytics.service.ProductEventService;
 import com.jis.truequedelibros.book.domain.Book;
 import com.jis.truequedelibros.book.dto.BookResponse;
 import com.jis.truequedelibros.book.dto.CreateBookRequest;
@@ -17,7 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -30,6 +34,7 @@ public class BookService {
     private final MatchRepository matchRepository;
     private final WishlistService wishlistService;
     private final OpenAiService openAiService;
+    private final ProductEventService productEventService;
 
     @Value("${book.default-cover-image-url}")
     private String defaultCoverImageUrl;
@@ -70,7 +75,16 @@ public class BookService {
 
         wishlistService.notifyInterestedUsers(book);
 
-        return toResponse(book);
+        long bookCount = bookRepository.countByOwner_Id(owner.getId());
+        boolean isFirst = bookCount == 1 && !productEventService.hasRecordedFirstBook(owner.getId());
+        if (isFirst) {
+            productEventService.record(owner.getId(), ProductEventService.FIRST_BOOK_UPLOADED,
+                    Map.of("intent", owner.getOnboardingIntent() != null ? owner.getOnboardingIntent().name() : "UNKNOWN"));
+        }
+
+        BookResponse response = toResponse(book);
+        response.setFirstBook(isFirst);
+        return response;
     }
 
     @Transactional
@@ -118,10 +132,20 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public List<BookResponse> getByOwner(UUID ownerId) {
-        return bookRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId)
-                .stream()
-                .map(this::toResponse)
+    public List<BookResponse> getByOwner(UUID ownerId, UUID requesterId) {
+        List<Book> books = bookRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId);
+
+        Set<UUID> likedBookIds = (requesterId == null || books.isEmpty())
+                ? Set.of()
+                : new HashSet<>(bookLikeRepository.findLikedBookIds(
+                        requesterId, books.stream().map(Book::getId).toList()));
+
+        return books.stream()
+                .map(book -> {
+                    BookResponse response = toResponse(book);
+                    response.setLikedByCurrentUser(likedBookIds.contains(book.getId()));
+                    return response;
+                })
                 .toList();
     }
 

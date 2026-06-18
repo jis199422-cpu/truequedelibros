@@ -15,4 +15,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByOrderByCreatedAtDesc();
     long countByActiveFalse();
     long countByCreatedAtAfter(LocalDateTime since);
+    long countByEmailVerifiedTrue();
+    long countByOnboardingCompletedTrue();
+
+    @org.springframework.data.jpa.repository.Query(
+            value = "SELECT COUNT(*) FROM users WHERE onboarding_intent = :intent",
+            nativeQuery = true)
+    long countByOnboardingIntent(@org.springframework.data.repository.query.Param("intent") String intent);
 }

@@ -15,11 +15,23 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
 
   useEffect(() => {
     if (leaving === 'right') {
-      const t = setTimeout(onSwipeRight, 320)
+      const t = setTimeout(async () => {
+        const accepted = await onSwipeRight?.()
+        if (accepted === false) {
+          setLeaving(null)
+          setOffset({ x: 0, y: 0 })
+        }
+      }, 320)
       return () => clearTimeout(t)
     }
     if (leaving === 'left') {
-      const t = setTimeout(onSwipeLeft, 320)
+      const t = setTimeout(async () => {
+        const accepted = await onSwipeLeft?.()
+        if (accepted === false) {
+          setLeaving(null)
+          setOffset({ x: 0, y: 0 })
+        }
+      }, 320)
       return () => clearTimeout(t)
     }
   }, [leaving])
@@ -122,25 +134,27 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
             onClick={(e) => { e.stopPropagation(); onTap() }}
           >ⓘ</button>
         )}
-        <p className="card-title">{book.title}</p>
-        <p className="card-author">{book.author}</p>
-        <div className="card-tags">
-          <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
-          {book.genre && <span className="card-genre">{genreLabel(book.genre)}</span>}
-        </div>
-        {(book.trueque || book.regalo || book.venta) && (
-          <div className="card-exchange-pills">
-            {book.trueque && <span className="card-exchange-pill">Trueque</span>}
-            {book.regalo && <span className="card-exchange-pill">Regalar</span>}
-            {book.venta && <span className="card-exchange-pill">Vender</span>}
-            {book.venta && book.precio != null && (
-              <span className="card-exchange-pill card-price-pill">${Number(book.precio).toLocaleString('es-AR')}</span>
-            )}
+        <div className="card-body-scroll">
+          <p className="card-title">{book.title}</p>
+          <p className="card-author">{book.author}</p>
+          <div className="card-tags">
+            <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
+            {book.genre && <span className="card-genre">{genreLabel(book.genre)}</span>}
           </div>
-        )}
-        {book.description && (
-          <p className="card-description">{book.description}</p>
-        )}
+          {(book.trueque || book.regalo || book.venta) && (
+            <div className="card-exchange-pills">
+              {book.trueque && <span className="card-exchange-pill">Trueque</span>}
+              {book.regalo && <span className="card-exchange-pill">Regalar</span>}
+              {book.venta && <span className="card-exchange-pill">Vender</span>}
+              {book.venta && book.precio != null && (
+                <span className="card-exchange-pill card-price-pill">${Number(book.precio).toLocaleString('es-AR')}</span>
+              )}
+            </div>
+          )}
+          {book.description && (
+            <p className="card-description">{book.description}</p>
+          )}
+        </div>
         <div className="card-owner">
           <OwnerAvatar owner={book.owner} />
           <div>

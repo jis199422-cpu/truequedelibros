@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { AuthLayout } from '../components/AuthLayout'
 import { GoogleLoginButton } from '../components/GoogleLoginButton'
@@ -7,13 +7,21 @@ import { Input } from '../../../shared/components/Input'
 import { Button } from '../../../shared/components/Button'
 import { Logo } from '../../../shared/components/Logo'
 import { register } from '../../../shared/api/auth.api'
-import { trackCompleteRegistration } from '../../../shared/utils/metaPixel'
+import { trackRegistrationStarted } from '../../../shared/utils/metaPixel'
 
 export function RegisterPage() {
+  const location = useLocation()
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const startedTracked = useRef(false)
+
+  useEffect(() => {
+    if (startedTracked.current) return
+    startedTracked.current = true
+    trackRegistrationStarted(location.state?.source ?? 'direct')
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -26,7 +34,7 @@ export function RegisterPage() {
     setLoading(true)
     try {
       await register(form)
-      trackCompleteRegistration()
+      localStorage.setItem('pendingRegistrationSource', location.state?.source ?? 'direct')
       setSent(true)
     } catch (err) {
       const res = err.response?.data

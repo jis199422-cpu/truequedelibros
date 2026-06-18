@@ -3,11 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { getBook, createBook, updateBook, getBookUploadUrl } from '../../../shared/api/books.api'
 import { uploadToS3, updateLocation } from '../../../shared/api/users.api'
+import { trackFirstBookUploaded } from '../../../shared/utils/metaPixel'
+import { resizeImage } from '../../../shared/utils/imageResize'
 import { useGenres } from '../hooks/useGenres'
 import { Button } from '../../../shared/components/Button'
 import { Input } from '../../../shared/components/Input'
 import { Spinner } from '../../../shared/components/Spinner'
 import useAuthStore from '../../auth/store/authStore'
+import useLikeGateStore from '../../feed/store/likeGateStore'
 
 const CONDITIONS = ['NUEVO', 'BUENO', 'USADO']
 
@@ -18,6 +21,7 @@ export function BookFormPage() {
   const isEdit = !!bookId
   const user = useAuthStore((s) => s.user)
   const updateUser = useAuthStore((s) => s.updateUser)
+  const setHasBooks = useLikeGateStore((s) => s.setHasBooks)
 
   const { genres } = useGenres()
   const [form, setForm] = useState({ title: '', author: '', genre: '', condition: 'BUENO', description: '', coverImageUrl: '', regalo: false, trueque: true, venta: false, precio: '' })
@@ -55,11 +59,17 @@ export function BookFormPage() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) { toast.error('Solo se permiten imágenes'); return }
-    setCoverPreview(URL.createObjectURL(file))
     setUploading(true)
+    let resized = file
     try {
-      const { data } = await getBookUploadUrl({ fileName: file.name, contentType: file.type })
-      await uploadToS3(data.uploadUrl, file)
+      resized = await resizeImage(file)
+    } catch {
+      // si falla el resize, se sube el archivo original
+    }
+    setCoverPreview(URL.createObjectURL(resized))
+    try {
+      const { data } = await getBookUploadUrl({ fileName: resized.name, contentType: resized.type })
+      await uploadToS3(data.uploadUrl, resized)
       setForm((prev) => ({ ...prev, coverImageUrl: data.imageUrl }))
     } catch {
       toast('No se pudo subir la imagen, podés guardar igual sin portada', { icon: '⚠️' })
@@ -72,6 +82,7 @@ export function BookFormPage() {
     e.preventDefault()
     if (!form.genre) { toast.error('El género es obligatorio'); return }
     if (!form.regalo && !form.trueque && !form.venta) { toast.error('Seleccioná al menos una modalidad de trueque'); return }
+    const isFirstBook = !user?.hasBooks
     setSaving(true)
     const payload = {
       ...form,
@@ -82,8 +93,15 @@ export function BookFormPage() {
         await updateBook(bookId, payload)
         toast.success('Libro actualizado')
       } else {
-        await createBook(payload)
+        const { data: bookData } = await createBook(payload)
         toast.success('Libro agregado')
+        if (isFirstBook) trackFirstBookUploaded({ intent: user?.onboardingIntent ?? 'UNKNOWN', bookTitle: form.title, bookGenre: form.genre })
+        updateUser({ hasBooks: true })
+        setHasBooks(true)
+        if (bookData.firstBook) {
+          navigate('/feed', { replace: true })
+          return
+        }
       }
       navigate(-1)
     } catch (err) {
@@ -154,6 +172,17 @@ export function BookFormPage() {
         </button>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{isEdit ? 'Editar libro' : 'Agregar libro'}</h1>
       </div>
+
+      {!isEdit && user?.onboardingIntent === 'INTERCAMBIAR' && !user?.hasBooks && (
+        <div className="book-form-motivational-banner">
+          🎉 ¡Estás a un paso de comenzar a intercambiar libros!
+        </div>
+      )}
+      {!isEdit && user?.onboardingIntent !== 'INTERCAMBIAR' && !user?.hasBooks && (
+        <div className="book-form-motivational-banner">
+          📚 Tu feed muestra solo libros en venta o regalo. Marcá este libro como Trueque para ver también los de trueque.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="form-stack">
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>

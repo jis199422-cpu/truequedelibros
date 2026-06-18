@@ -29,7 +29,9 @@ export function LoginPage() {
     try {
       const { data } = await login({ ...form, rememberMe })
       setAuth(data.accessToken, data.user)
-      navigate(data.user.role === 'LOCAL' ? '/local/dashboard' : '/feed', { replace: true })
+      if (data.user.role === 'LOCAL') navigate('/local/dashboard', { replace: true })
+      else if (!data.user.onboardingCompleted) navigate('/onboarding', { replace: true })
+      else navigate('/feed', { replace: true })
     } catch (err) {
       const res = err.response?.data
       if (res?.fields) setErrors(res.fields)
@@ -84,7 +86,7 @@ export function LoginPage() {
       <GoogleLoginButton />
 
       <p className="auth-footer">
-        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+        ¿No tienes cuenta? <Link to="/register" state={{ source: 'login_page' }}>Regístrate</Link>
       </p>
     </AuthLayout>
   )

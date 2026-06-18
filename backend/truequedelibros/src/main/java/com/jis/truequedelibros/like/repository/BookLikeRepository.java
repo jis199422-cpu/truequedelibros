@@ -22,6 +22,9 @@ public interface BookLikeRepository extends JpaRepository<BookLike, UUID> {
     // "Has userId liked any book owned by ownerId?" — used for mutual match detection
     Optional<BookLike> findFirstByLiker_IdAndBook_Owner_Id(UUID likerId, UUID ownerId);
 
+    @Query("SELECT bl.book.id FROM BookLike bl WHERE bl.liker.id = :likerId AND bl.book.id IN :bookIds")
+    List<UUID> findLikedBookIds(@Param("likerId") UUID likerId, @Param("bookIds") List<UUID> bookIds);
+
     @Query("SELECT bl FROM BookLike bl WHERE bl.book.owner = :user " +
            "AND NOT EXISTS (SELECT m FROM Match m WHERE " +
            "  (m.userA = bl.liker AND m.userB = :user) OR " +

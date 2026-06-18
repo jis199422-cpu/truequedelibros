@@ -1,5 +1,6 @@
 import client from '../../../shared/api/client'
 import { uploadToS3 } from '../../../shared/api/users.api'
+import { resizeImage } from '../../../shared/utils/imageResize'
 
 export const getLocales    = ()     => client.get('/locales')
 export const getLocal      = (id)   => client.get(`/locales/${id}`)
@@ -25,7 +26,13 @@ export const getLogoUploadUrl = (fileName, contentType) =>
   client.post('/admin/locales/logo-upload-url', { fileName, contentType })
 
 export const uploadLogo = async (file) => {
-  const { data } = await getLogoUploadUrl(file.name, file.type)
-  await uploadToS3(data.uploadUrl, file)
+  let resized = file
+  try {
+    resized = await resizeImage(file, { maxWidth: 600, maxHeight: 600 })
+  } catch {
+    // si falla el resize, se sube el archivo original
+  }
+  const { data } = await getLogoUploadUrl(resized.name, resized.type)
+  await uploadToS3(data.uploadUrl, resized)
   return data.imageUrl
 }

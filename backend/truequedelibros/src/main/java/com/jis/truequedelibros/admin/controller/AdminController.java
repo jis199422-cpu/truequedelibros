@@ -1,5 +1,6 @@
 package com.jis.truequedelibros.admin.controller;
 
+import com.jis.truequedelibros.admin.dto.ActivationStatsResponse;
 import com.jis.truequedelibros.admin.dto.AdminBookResponse;
 import com.jis.truequedelibros.admin.dto.AdminStatsResponse;
 import com.jis.truequedelibros.admin.dto.AdminUserResponse;
@@ -21,6 +22,11 @@ public class AdminController {
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsResponse> getStats() {
         return ResponseEntity.ok(adminService.getStats());
+    }
+
+    @GetMapping("/stats/activation")
+    public ResponseEntity<ActivationStatsResponse> getActivationStats() {
+        return ResponseEntity.ok(adminService.getActivationStats());
     }
 
     @GetMapping("/users")

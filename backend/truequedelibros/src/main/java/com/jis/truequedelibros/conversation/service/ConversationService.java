@@ -1,5 +1,6 @@
 package com.jis.truequedelibros.conversation.service;
 
+import com.jis.truequedelibros.book.domain.Book;
 import com.jis.truequedelibros.conversation.domain.Conversation;
 import com.jis.truequedelibros.conversation.domain.Message;
 import com.jis.truequedelibros.conversation.dto.ConversationResponse;
@@ -36,6 +37,12 @@ public class ConversationService {
         return conversationRepository.findByUserA_IdAndUserB_Id(userA.getId(), userB.getId())
                 .orElseGet(() -> conversationRepository.save(
                         Conversation.builder().userA(userA).userB(userB).build()));
+    }
+
+    @Transactional
+    public Conversation openBookContact(User contactor, Book book) {
+        User owner = book.getOwner();
+        return findOrCreate(contactor, owner);
     }
 
     @Transactional
@@ -92,6 +99,7 @@ public class ConversationService {
                 .id(m.getId()).conversationId(m.getConversation().getId())
                 .senderId(m.getSender().getId()).senderName(m.getSender().getName())
                 .content(m.getContent()).read(m.getReadAt() != null)
+                .system(m.isSystemMessage())
                 .createdAt(m.getCreatedAt().atOffset(ZoneOffset.UTC)).build();
     }
 }

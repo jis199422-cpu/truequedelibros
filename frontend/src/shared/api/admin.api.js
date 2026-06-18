@@ -1,6 +1,7 @@
 import client from './client'
 
 export const getAdminStats = () => client.get('/admin/stats')
+export const getActivationStats = () => client.get('/admin/stats/activation')
 export const getAdminUsers = () => client.get('/admin/users')
 export const toggleBanUser = (id) => client.put(`/admin/users/${id}/ban`)
 export const getAdminBooks = () => client.get('/admin/books')

@@ -28,6 +28,8 @@ public class BookResponse {
     private boolean trueque;
     private boolean venta;
     private BigDecimal precio;
+    private boolean firstBook;
+    private boolean likedByCurrentUser;
 
     @Data
     @Builder

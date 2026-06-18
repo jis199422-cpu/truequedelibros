@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/authStore'
 import { getConversations, getMessages } from '../../../shared/api/conversations.api'
 import { getUserOnlineStatus } from '../../../shared/api/users.api'
 import { useStomp } from '../context/StompContext'
+import { trackMessageSent } from '../../../shared/utils/metaPixel'
 import { Spinner } from '../../../shared/components/Spinner'
 import { ManagedExchangeBanner } from '../components/ManagedExchangeBanner'
 import { UserAvatar } from '../../../shared/components/UserAvatar'
@@ -12,7 +13,14 @@ import { UserAvatar } from '../../../shared/components/UserAvatar'
 export function ChatPage() {
   const { conversationId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const currentUser = useAuthStore((s) => s.user)
+  const bookHint = location.state?.bookHint
+  const inputPlaceholder = bookHint
+    ? bookHint.isVenta
+      ? `Escribile a ${bookHint.ownerName} para coordinar la compra...`
+      : `Escribile a ${bookHint.ownerName} para coordinar la entrega...`
+    : 'Escribe un mensaje...'
 
   const [messages, setMessages] = useState([])
   const [otherUser, setOtherUser] = useState(null)
@@ -152,6 +160,7 @@ export function ChatPage() {
     clearTimeout(typingTimeoutRef.current)
     sendTyping(conversationId, false)
 
+    const isFirstMessage = messages.length === 0
     const optimistic = {
       id: `temp-${Date.now()}`,
       conversationId,
@@ -163,6 +172,7 @@ export function ChatPage() {
     setMessages((prev) => [...prev, optimistic])
     setInput('')
     sendMessage(conversationId, content)
+    trackMessageSent({ conversationId, recipientUserId: otherUser?.id, isFirstMessage })
   }
 
   const handleKeyDown = (e) => {
@@ -200,14 +210,14 @@ export function ChatPage() {
                       {otherOnline ? 'Conectado' : 'Desconectado'}
                     </span>
                 }
+                <button
+                  className="chat-view-books-link"
+                  onClick={() => navigate(`/profile/${otherUser.id}`)}
+                >
+                  Ver los libros de {otherUser.name}
+                </button>
               </div>
             </div>
-            <button
-              className="chat-view-books-link"
-              onClick={() => navigate(`/profile/${otherUser.id}`)}
-            >
-              Ver los libros que ofrece {otherUser.name} para trueque
-            </button>
           </div>
         )}
       </div>
@@ -232,7 +242,7 @@ export function ChatPage() {
           value={input}
           onChange={handleTypingInput}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe un mensaje..."
+          placeholder={inputPlaceholder}
           rows={1}
         />
         <button className="send-btn" onClick={handleSend} disabled={!input.trim() || !connected}>
@@ -262,6 +272,9 @@ function findLastTempIndex(messages, incoming) {
 }
 
 function MessageBubble({ message, isOwn }) {
+  if (message.system) {
+    return <div className="message-system">{message.content}</div>
+  }
   return (
     <div className={`message-bubble ${isOwn ? 'message-own' : 'message-other'}`}>
       <span className="message-sender">{isOwn ? 'Yo' : message.senderName}</span>

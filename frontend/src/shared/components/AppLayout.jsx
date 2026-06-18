@@ -20,7 +20,7 @@ export function GuestFeedLayout({ children }) {
       <div className="guest-banner">
         <p className="guest-banner-text">¡Intercambiá libros con personas cerca tuyo!</p>
         <div className="guest-banner-actions">
-          <button className="btn btn-primary btn-sm" onClick={() => navigate('/register')}>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/register', { state: { source: 'guest_banner' } })}>
             Crear cuenta
           </button>
           <button className="btn btn-outline btn-sm" onClick={() => navigate('/login')}>

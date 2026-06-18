@@ -1,8 +1,11 @@
 package com.jis.truequedelibros.admin.service;
 
+import com.jis.truequedelibros.admin.dto.ActivationStatsResponse;
 import com.jis.truequedelibros.admin.dto.AdminBookResponse;
 import com.jis.truequedelibros.admin.dto.AdminStatsResponse;
 import com.jis.truequedelibros.admin.dto.AdminUserResponse;
+import com.jis.truequedelibros.analytics.repository.ProductEventRepository;
+import com.jis.truequedelibros.analytics.service.ProductEventService;
 import com.jis.truequedelibros.book.domain.Book;
 import com.jis.truequedelibros.book.domain.BookStatus;
 import com.jis.truequedelibros.book.repository.BookRepository;
@@ -28,6 +31,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final MatchRepository matchRepository;
+    private final ProductEventRepository productEventRepository;
 
     @Transactional(readOnly = true)
     public AdminStatsResponse getStats() {
@@ -80,6 +84,29 @@ public class AdminService {
                 .stream()
                 .map(this::toBookResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ActivationStatsResponse getActivationStats() {
+        long registeredUsers = userRepository.countByEmailVerifiedTrue();
+        long onboardingCompleted = userRepository.countByOnboardingCompletedTrue();
+        long intentIntercambiar = userRepository.countByOnboardingIntent("INTERCAMBIAR");
+        long intentVender = userRepository.countByOnboardingIntent("VENDER");
+        long intentComprar = userRepository.countByOnboardingIntent("COMPRAR");
+        long firstBookUploaded = productEventRepository.countDistinctUsersByEventName(ProductEventService.FIRST_BOOK_UPLOADED);
+        double conversionRate = registeredUsers > 0 ? (double) firstBookUploaded / registeredUsers * 100.0 : 0.0;
+        Double avgMinutes = productEventRepository.avgMinutesFromRegistration(ProductEventService.FIRST_BOOK_UPLOADED);
+
+        return ActivationStatsResponse.builder()
+                .registeredUsers(registeredUsers)
+                .onboardingCompleted(onboardingCompleted)
+                .intentIntercambiar(intentIntercambiar)
+                .intentVender(intentVender)
+                .intentComprar(intentComprar)
+                .firstBookUploaded(firstBookUploaded)
+                .conversionRate(conversionRate)
+                .avgMinutesToFirstBook(avgMinutes)
+                .build();
     }
 
     @Transactional

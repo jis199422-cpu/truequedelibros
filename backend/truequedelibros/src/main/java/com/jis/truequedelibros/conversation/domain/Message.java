@@ -31,6 +31,10 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Builder.Default
+    @Column(name = "is_system", nullable = false)
+    private boolean systemMessage = false;
+
     private LocalDateTime readAt;
 
     @Column(nullable = false, updatable = false)

@@ -19,4 +19,7 @@ public class UserResponse {
     private Role role;
     private boolean emailVerified;
     private boolean premium;
+    private boolean onboardingCompleted;
+    private String onboardingIntent;
+    private boolean hasBooks;
 }

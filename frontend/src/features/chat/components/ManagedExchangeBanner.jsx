@@ -41,7 +41,7 @@ export function ManagedExchangeBanner({ conversationId }) {
   return (
     <div className="mgex-banner">
       <span className="mgex-banner-text">
-        Podés coordinar el trueque en los puntos seguros.{' '}
+        Podés reunirte o dejar el libro en los puntos seguros.{' '}
         <button className="mgex-banner-link" onClick={() => navigate('/puntos-seguros')}>
           Ver puntos seguros.
         </button>

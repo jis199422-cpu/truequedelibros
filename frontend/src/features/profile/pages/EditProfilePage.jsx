@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/authStore'
 import { updateProfile, getAvatarUploadUrl, uploadToS3 } from '../../../shared/api/users.api'
+import { resizeImage } from '../../../shared/utils/imageResize'
 import { Button } from '../../../shared/components/Button'
 import { Input } from '../../../shared/components/Input'
 import { Spinner } from '../../../shared/components/Spinner'
@@ -39,11 +40,17 @@ export function EditProfilePage() {
     }
 
     setUploading(true)
+    let resized = file
     try {
-      const { data } = await getAvatarUploadUrl({ fileName: file.name, contentType: file.type })
-      await uploadToS3(data.uploadUrl, file)
+      resized = await resizeImage(file, { maxWidth: 500, maxHeight: 500 })
+    } catch {
+      // si falla el resize, se sube el archivo original
+    }
+    try {
+      const { data } = await getAvatarUploadUrl({ fileName: resized.name, contentType: resized.type })
+      await uploadToS3(data.uploadUrl, resized)
       setForm((prev) => ({ ...prev, profilePictureUrl: data.imageUrl }))
-      setAvatarPreview(URL.createObjectURL(file))
+      setAvatarPreview(URL.createObjectURL(resized))
       toast.success('Foto actualizada')
     } catch {
       toast.error('Error al subir la imagen')

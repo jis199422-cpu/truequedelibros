@@ -15,9 +15,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.jis.truequedelibros.user.domain.User;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -225,6 +227,37 @@ public class EmailService {
         }
     }
 
+    public void sendNoBooksNewsEmail(String toEmail, String name, long availableBooksCount) {
+        String bodyHtml = "Notamos que todavía no publicaste ningún libro en <strong>Trueque de Libros</strong>. " +
+                "Te contamos algunas novedades que sumamos pensando en vos:<br><br>" +
+                "<ul style=\"margin:0;padding-left:20px;color:#4a4a4a;font-size:15px;line-height:1.8\">" +
+                "<li><strong>Puntos seguros:</strong> ya podés coordinar tus trueques en locales aliados — dejás el libro " +
+                "que vas a intercambiar y retirás el que te corresponde, sin necesidad de coordinar un encuentro cara a cara.</li>" +
+                "<li><strong>Descuentos exclusivos:</strong> por ser usuario de Trueque de Libros, en esos mismos locales " +
+                "tenés descuentos especiales. Estamos arrancando, pero ya estamos sumando cafeterías y otros tipos de comercio.</li>" +
+                "<li><strong>Ahora también podés regalar:</strong> sumamos la opción de regalar tus libros, y también hay " +
+                "libros de regalo disponibles para vos.</li>" +
+                "</ul><br>" +
+                "Hoy hay <strong>" + availableBooksCount + " libros disponibles</strong> para intercambiar, comprar o " +
+                "conseguir de regalo — seguro encontrás algo que te interese.<br><br>" +
+                "Para empezar, solo te falta subir tu primer libro. ¡Te toma un minuto!<br><br>" +
+                "Y nos encantaría conocer tu opinión: ¿qué te gustaría que sumemos? ¿Clubes de lectura? ¿Eventos? " +
+                "¿Más descuentos? Respondé este email, lo vamos a leer.";
+        String html = buildHtmlEmail(
+                "¡Tenemos novedades para vos!",
+                "Hola " + name + ",",
+                bodyHtml,
+                "Subir mi primer libro",
+                frontendUrl + "/my-books"
+        );
+        try {
+            sendEmail(toEmail, name, "Novedades en Trueque de Libros: puntos seguros, descuentos y más",
+                    html, "contacto@truequedelibros.com");
+        } catch (Exception e) {
+            log.error("Error enviando email de novedades a {}: {}", toEmail, e.getMessage());
+        }
+    }
+
     public void sendHomeDeliveryRequest(User user, UUID conversationId) {
         String cityPart = (user.getCity() != null && !user.getCity().isBlank())
                 ? user.getCity() : "no especificada";
@@ -245,17 +278,64 @@ public class EmailService {
                 "Solicitud de envío a domicilio — " + user.getName(), html);
     }
 
+    public void sendExternalPurchaseRequestEmail(User user, List<String> bookTitles) {
+        String titlesHtml = bookTitles.stream()
+                .map(t -> "<li>" + t + "</li>")
+                .collect(Collectors.joining());
+        String bodyHtml = "<p>El usuario <strong>" + user.getName() + "</strong> (" + user.getEmail() +
+                ") quiere que le avisemos sobre opciones de compra fuera de Trueque de Libros para:</p>" +
+                "<ul>" + titlesHtml + "</ul>";
+        String html = buildHtmlEmail(
+                "Solicitud de búsqueda de precios externos",
+                "Hola equipo,",
+                bodyHtml,
+                null, null
+        );
+        sendEmail("contacto@truequedelibros.com", "Equipo Trueque de Libros",
+                "Solicitud de precios externos — " + user.getName(), html);
+    }
+
+    public void sendBookUnavailableReport(String bookTitle, String localName,
+                                           String userName, String userEmail,
+                                           java.time.LocalDateTime reportedAt, String message) {
+        String comentario = (message != null && !message.isBlank())
+                ? "<li><strong>Comentario:</strong> " + message + "</li>"
+                : "";
+        String bodyHtml = "<p>Se reportó un libro como no disponible en un Punto Seguro.</p>" +
+                "<ul>" +
+                "<li><strong>Libro:</strong> " + bookTitle + "</li>" +
+                "<li><strong>Local:</strong> " + localName + "</li>" +
+                "<li><strong>Usuario:</strong> " + userName + " (" + userEmail + ")</li>" +
+                "<li><strong>Fecha y hora:</strong> " + reportedAt.toString().replace("T", " ") + "</li>" +
+                comentario +
+                "</ul>";
+        String html = buildHtmlEmail(
+                "Libro reportado como no disponible",
+                "Hola equipo,",
+                bodyHtml,
+                null, null
+        );
+        sendEmail("contacto@truequedelibros.com", "Equipo Trueque de Libros",
+                "Libro no disponible en " + localName + " — " + bookTitle, html);
+    }
+
     private void sendEmail(String toAddress, String toName, String subject, String htmlBody) {
+        sendEmail(toAddress, toName, subject, htmlBody, null);
+    }
+
+    private void sendEmail(String toAddress, String toName, String subject, String htmlBody, String replyToAddress) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(HttpHeaders.AUTHORIZATION, sendMailToken);
 
-        Map<String, Object> body = Map.of(
-                "from", Map.of("address", fromAddress, "name", fromName),
-                "to", List.of(Map.of("email_address", Map.of("address", toAddress, "name", toName))),
-                "subject", subject,
-                "htmlbody", htmlBody
-        );
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("from", Map.of("address", fromAddress, "name", fromName));
+        body.put("to", List.of(Map.of("email_address", Map.of("address", toAddress, "name", toName))));
+        body.put("subject", subject);
+        body.put("htmlbody", htmlBody);
+        if (replyToAddress != null) {
+            body.put("reply_to", List.of(Map.of("address", replyToAddress, "name", "Equipo Trueque de Libros")));
+        }
 
         try {
             retryTemplate.execute((RetryCallback<Void, RestClientException>) ctx -> {

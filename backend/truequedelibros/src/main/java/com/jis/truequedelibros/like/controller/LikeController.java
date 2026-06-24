@@ -38,6 +38,19 @@ public class LikeController {
                     "conversationId", result.conversationId()
             ));
         }
+        if (result.puntoSeguro() != null) {
+            LikeService.PuntoSeguroInfo info = result.puntoSeguro();
+            return ResponseEntity.ok(Map.of(
+                    "matched", false,
+                    "puntoSeguro", true,
+                    "localId", info.localId(),
+                    "localName", info.localName(),
+                    "localAddress", info.localAddress(),
+                    "plazoDias", info.plazoDias(),
+                    "isPremiumUser", info.isPremiumUser(),
+                    "promociones", info.promociones()
+            ));
+        }
         return ResponseEntity.ok(Map.of("matched", false));
     }
 

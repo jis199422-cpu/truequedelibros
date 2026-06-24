@@ -3,9 +3,9 @@ import client from './client'
 export const likeBook = (bookId) => client.post(`/books/${bookId}/like`)
 export const dislikeBook = (bookId) => client.post(`/books/${bookId}/dislike`)
 export const unlikeBook = (bookId) => client.delete(`/books/${bookId}/like`)
-export const getFeed = (excludeIds = [], genre = null, lat = null, lng = null) => {
+export const getFeed = (cursor = null, genre = null, lat = null, lng = null) => {
   const params = new URLSearchParams()
-  if (excludeIds.length > 0) params.append('excludeIds', excludeIds.join(','))
+  if (cursor) params.append('cursor', cursor)
   if (genre) params.append('genre', genre)
   if (lat != null) params.append('lat', lat)
   if (lng != null) params.append('lng', lng)

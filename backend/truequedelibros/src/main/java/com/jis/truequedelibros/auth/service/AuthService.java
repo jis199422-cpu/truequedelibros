@@ -135,6 +135,11 @@ public class AuthService {
                 .onboardingCompleted(user.isOnboardingCompleted())
                 .onboardingIntent(user.getOnboardingIntent() != null ? user.getOnboardingIntent().name() : null)
                 .hasBooks(bookRepository.existsByOwner_IdAndStatus(user.getId(), BookStatus.AVAILABLE))
+                .wishlistNotifyOnMatch(user.isWishlistNotifyOnMatch())
+                .wishlistNotifyExternalPurchase(user.isWishlistNotifyExternalPurchase())
+                .notifyOnNewMessage(user.isNotifyOnNewMessage())
+                .notifyOnBookLike(user.isNotifyOnBookLike())
+                .termsAcceptedAt(user.getTermsAcceptedAt())
                 .build();
     }
 

@@ -10,6 +10,9 @@ public record LocalRequest(
         @NotBlank String name,
         @NotBlank String address,
         String logoUrl,
+        String cartaUrl,
         @NotNull LocalCategory category,
-        @NotNull UUID ownerId
+        @NotNull UUID ownerId,
+        Double latitude,
+        Double longitude
 ) {}

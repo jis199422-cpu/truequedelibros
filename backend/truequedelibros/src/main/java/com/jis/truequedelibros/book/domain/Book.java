@@ -1,5 +1,6 @@
 package com.jis.truequedelibros.book.domain;
 
+import com.jis.truequedelibros.beneficio.domain.Local;
 import com.jis.truequedelibros.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,6 +25,10 @@ public class Book {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "local_id")
+    private Local local;
 
     @Column(nullable = false)
     private String title;

@@ -39,3 +39,12 @@ export const trackWishlistItemAdded = ({ bookTitle, source }) =>
 
 export const trackSectionViewed = (section) =>
   fbqTrack('trackCustom', 'section_viewed', { section })
+
+export const trackPuntoSeguroLiked = ({ localName, bookTitle }) =>
+  fbqTrack('trackCustom', 'punto_seguro_liked', { local_name: localName, book_title: bookTitle })
+
+export const trackBeneficioCanjear = ({ localName, localId, promocionId }) =>
+  fbqTrack('trackCustom', 'beneficio_canjear_clicked', { local_name: localName, local_id: localId, promocion_id: promocionId })
+
+export const trackLocalBooksViewed = ({ localName, localId }) =>
+  fbqTrack('trackCustom', 'local_books_viewed', { local_name: localName, local_id: localId })

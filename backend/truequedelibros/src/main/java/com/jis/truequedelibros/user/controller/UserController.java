@@ -12,6 +12,7 @@ import com.jis.truequedelibros.user.domain.User;
 import com.jis.truequedelibros.user.dto.LocationRequest;
 import com.jis.truequedelibros.user.dto.OnboardingRequest;
 import com.jis.truequedelibros.user.dto.PublicProfileResponse;
+import com.jis.truequedelibros.user.dto.NotificationPreferencesRequest;
 import com.jis.truequedelibros.user.dto.UpdateUserRequest;
 import com.jis.truequedelibros.user.service.UserService;
 import jakarta.validation.Valid;
@@ -94,6 +95,18 @@ public class UserController {
             @Valid @RequestBody OnboardingRequest request,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(userService.saveOnboarding(user.getId(), request.getIntent(), request.getCustomIntent()));
+    }
+
+    @PutMapping("/me/notification-preferences")
+    public ResponseEntity<UserResponse> updateNotificationPreferences(
+            @Valid @RequestBody NotificationPreferencesRequest request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.updateNotificationPreferences(user.getId(), request));
+    }
+
+    @PostMapping("/me/terms-acceptance")
+    public ResponseEntity<UserResponse> acceptTerms(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.acceptTerms(user.getId()));
     }
 
 }

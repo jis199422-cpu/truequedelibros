@@ -26,7 +26,6 @@ public class NotificationService {
     public void notifyBookLiked(User bookOwner, User liker, String bookTitle, UUID bookId) {
         String text = liker.getName() + " le dio like a tu libro \"" + bookTitle + "\"";
         push(bookOwner, NotificationType.BOOK_LIKED, bookId, text);
-        emailService.sendBookLikedEmail(bookOwner.getEmail(), bookOwner.getName(), liker.getName(), bookTitle);
     }
 
     public void notifyMatch(User userA, User userB, UUID matchId) {

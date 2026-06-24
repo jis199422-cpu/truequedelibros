@@ -1,0 +1,1 @@
+ALTER TABLE locales ADD COLUMN carta_url VARCHAR(500);

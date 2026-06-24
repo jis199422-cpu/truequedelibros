@@ -53,6 +53,10 @@ public class BeneficioService {
     }
 
     public GenerarCuponResponse generarCupon(User user, GenerarCuponRequest request) {
+        if (user.getTermsAcceptedAt() == null) {
+            throw new AppException("Debés aceptar los términos y condiciones de la plataforma", HttpStatus.FORBIDDEN);
+        }
+
         Local local = findLocalOrThrow(request.localId());
 
         if (!local.isActive()) {
@@ -147,9 +151,13 @@ public class BeneficioService {
                 .name(request.name())
                 .address(request.address())
                 .logoUrl(request.logoUrl())
+                .cartaUrl(request.cartaUrl())
                 .category(request.category())
                 .owner(owner)
+                .latitude(request.latitude())
+                .longitude(request.longitude())
                 .build();
+        syncOwnerLocation(owner, request.latitude(), request.longitude());
         return toResponse(localRepository.save(local));
     }
 
@@ -158,14 +166,28 @@ public class BeneficioService {
         local.setName(request.name());
         local.setAddress(request.address());
         local.setLogoUrl(request.logoUrl());
+        local.setCartaUrl(request.cartaUrl());
         local.setCategory(request.category());
+        local.setLatitude(request.latitude());
+        local.setLongitude(request.longitude());
 
-        if (!local.getOwner().getId().equals(request.ownerId())) {
-            User newOwner = userRepository.findById(request.ownerId())
+        User owner = local.getOwner();
+        if (!owner.getId().equals(request.ownerId())) {
+            owner = userRepository.findById(request.ownerId())
                     .orElseThrow(() -> new AppException("Usuario no encontrado", HttpStatus.NOT_FOUND));
-            local.setOwner(newOwner);
+            local.setOwner(owner);
         }
+        syncOwnerLocation(owner, request.latitude(), request.longitude());
         return toResponse(localRepository.save(local));
+    }
+
+    // Los libros de punto seguro heredan la geolocalización del owner del Local (cuenta
+    // ROLE_LOCAL), para que el feed los ordene/filtre por distancia sin tocar sus queries.
+    private void syncOwnerLocation(User owner, Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) return;
+        owner.setLatitude(latitude);
+        owner.setLongitude(longitude);
+        userRepository.save(owner);
     }
 
     public void adminDeleteLocal(UUID localId) {
@@ -245,10 +267,13 @@ public class BeneficioService {
                 local.getName(),
                 local.getAddress(),
                 local.getLogoUrl(),
+                local.getCartaUrl(),
                 local.getCategory(),
                 local.getOwner().getId(),
                 local.getOwner().getName(),
-                promos
+                promos,
+                local.getLatitude(),
+                local.getLongitude()
         );
     }
 

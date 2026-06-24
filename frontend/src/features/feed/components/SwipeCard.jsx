@@ -103,7 +103,7 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
 
   return (
     <div
-      className="swipe-card"
+      className={`swipe-card${book.puntoSeguro ? ' swipe-card--punto-seguro' : ''}`}
       style={{
         zIndex: 10 - stackIndex,
         transform: getTransform(),
@@ -118,6 +118,11 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
     >
       <div className="card-like-badge" style={{ opacity: likeOpacity }}>LIKE</div>
       <div className="card-nope-badge" style={{ opacity: nopeOpacity }}>NOPE</div>
+      {book.puntoSeguro && (
+        <div className="swipe-card-punto-seguro-badge">
+          🛡️ Punto Seguro{book.localName ? ` · ${book.localName}` : ''}
+        </div>
+      )}
 
       <div className="card-cover">
         {book.coverImageUrl
@@ -138,10 +143,10 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
           <p className="card-title">{book.title}</p>
           <p className="card-author">{book.author}</p>
           <div className="card-tags">
-            <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
+            {!book.puntoSeguro && <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>}
             {book.genre && <span className="card-genre">{genreLabel(book.genre)}</span>}
           </div>
-          {(book.trueque || book.regalo || book.venta) && (
+          {!book.puntoSeguro && (book.trueque || book.regalo || book.venta) && (
             <div className="card-exchange-pills">
               {book.trueque && <span className="card-exchange-pill">Trueque</span>}
               {book.regalo && <span className="card-exchange-pill">Regalar</span>}
@@ -155,16 +160,30 @@ export function SwipeCard({ book, stackIndex, onSwipeRight, onSwipeLeft, onTap }
             <p className="card-description">{book.description}</p>
           )}
         </div>
-        <div className="card-owner">
-          <OwnerAvatar owner={book.owner} />
-          <div>
-            <p className="card-owner-name">{book.owner?.name}</p>
-            {book.owner?.city && <p className="card-owner-city">📍 {book.owner.city}</p>}
-            {book.distanceKm != null && (
-              <p className="card-owner-city">{book.distanceKm.toFixed(1)} km</p>
-            )}
+        {book.puntoSeguro ? (
+          <div className="card-owner card-local-info">
+            {book.localLogoUrl
+              ? <img src={book.localLogoUrl} alt={book.localName} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+              : <span style={{ fontSize: '1.5rem' }}>🏪</span>
+            }
+            <div>
+              <p className="card-owner-name">{book.localName}</p>
+              {book.localAddress && <p className="card-owner-city">📍 {book.localAddress}</p>}
+              {book.distanceKm != null && <p className="card-owner-city">{book.distanceKm.toFixed(1)} km</p>}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="card-owner">
+            <OwnerAvatar owner={book.owner} />
+            <div>
+              <p className="card-owner-name">{book.owner?.name}</p>
+              {book.owner?.city && <p className="card-owner-city">📍 {book.owner.city}</p>}
+              {book.distanceKm != null && (
+                <p className="card-owner-city">{book.distanceKm.toFixed(1)} km</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { trackLocalBooksViewed } from '../../../shared/utils/metaPixel'
 
 const PROMOS_VISIBLE = 2
 
-export function LocalCard({ local, onCanjear }) {
+export function LocalCard({ local, onCanjear, onVerLibros }) {
   const [expanded, setExpanded] = useState(false)
 
   const promos = local.promociones ?? []
@@ -25,6 +26,18 @@ export function LocalCard({ local, onCanjear }) {
           <p style={styles.address}>{local.address}</p>
         </div>
       </div>
+
+      {local.cartaUrl && (
+        <a
+          href={local.cartaUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.cartaLink}
+          onClick={e => e.stopPropagation()}
+        >
+          Ver carta
+        </a>
+      )}
 
       {promos.length > 0 && (
         <ul style={styles.promoList} onClick={e => e.stopPropagation()}>
@@ -50,11 +63,19 @@ export function LocalCard({ local, onCanjear }) {
         </ul>
       )}
 
+      {onVerLibros && (
+        <button
+          style={styles.verLibrosBtn}
+          onClick={e => { e.stopPropagation(); trackLocalBooksViewed({ localName: local.name, localId: local.id }); onVerLibros(local) }}
+        >
+          Ver libros disponibles
+        </button>
+      )}
       <button
         style={styles.canjearBtn}
         onClick={e => { e.stopPropagation(); onCanjear(local) }}
       >
-        Canjear
+        Canjear beneficio
       </button>
     </div>
   )
@@ -84,6 +105,10 @@ const styles = {
   },
   name: { margin: '6px 0 2px', fontSize: 16, fontWeight: 700, color: '#1a1a1a' },
   address: { margin: 0, fontSize: 13, color: '#888' },
+  cartaLink: {
+    display: 'inline-block', fontSize: 13, fontWeight: 600,
+    color: '#5b8fa8', textDecoration: 'underline', marginBottom: 14,
+  },
   promoList: { listStyle: 'none', margin: '0 0 16px', padding: 0 },
   promoItem: {
     display: 'flex', gap: 8, padding: '5px 0',
@@ -94,6 +119,12 @@ const styles = {
   verMasBtn: {
     background: 'none', border: 'none', color: '#5b8fa8',
     fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '4px 0',
+  },
+  verLibrosBtn: {
+    width: '100%', padding: '11px', borderRadius: 10,
+    border: '1.5px solid #5b8fa8', background: '#fff',
+    color: '#5b8fa8', fontSize: 15, fontWeight: 700,
+    cursor: 'pointer', letterSpacing: 0.3, marginBottom: 10,
   },
   canjearBtn: {
     width: '100%', padding: '12px', borderRadius: 10, border: 'none',

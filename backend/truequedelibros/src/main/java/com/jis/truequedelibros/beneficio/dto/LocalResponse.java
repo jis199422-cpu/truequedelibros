@@ -10,8 +10,11 @@ public record LocalResponse(
         String name,
         String address,
         String logoUrl,
+        String cartaUrl,
         LocalCategory category,
         UUID ownerId,
         String ownerName,
-        List<PromocionResponse> promociones
+        List<PromocionResponse> promociones,
+        Double latitude,
+        Double longitude
 ) {}

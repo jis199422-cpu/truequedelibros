@@ -1,5 +1,7 @@
 package com.jis.truequedelibros.like.service;
 
+import com.jis.truequedelibros.beneficio.domain.Local;
+import com.jis.truequedelibros.beneficio.domain.Promocion;
 import com.jis.truequedelibros.book.domain.Book;
 import com.jis.truequedelibros.book.domain.BookStatus;
 import com.jis.truequedelibros.book.repository.BookRepository;
@@ -13,6 +15,7 @@ import com.jis.truequedelibros.like.repository.BookDislikeRepository;
 import com.jis.truequedelibros.like.repository.BookLikeRepository;
 import com.jis.truequedelibros.match.domain.Match;
 import com.jis.truequedelibros.match.repository.MatchRepository;
+import com.jis.truequedelibros.auth.service.EmailService;
 import com.jis.truequedelibros.notification.service.NotificationService;
 import com.jis.truequedelibros.shared.exception.AppException;
 import com.jis.truequedelibros.user.domain.User;
@@ -40,6 +43,7 @@ public class LikeService {
     private final MatchRepository matchRepository;
     private final ConversationService conversationService;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     private static final ZoneId ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
     private static final int WINDOW_HOURS = 12;
@@ -74,6 +78,10 @@ public class LikeService {
 
     @Transactional
     public LikeResult like(User liker, UUID bookId) {
+        if (liker.getTermsAcceptedAt() == null) {
+            throw new AppException("Debés aceptar los términos y condiciones de la plataforma", HttpStatus.FORBIDDEN);
+        }
+
         if (!liker.isPremium() && !bookRepository.existsByOwner_IdAndStatus(liker.getId(), BookStatus.AVAILABLE)) {
             long limit = computeDailyLimit();
             LocalDateTime start = windowStart();
@@ -90,7 +98,8 @@ public class LikeService {
         if (book.getOwner().getId().equals(liker.getId())) {
             throw new AppException("No puedes dar like a tus propios libros", HttpStatus.BAD_REQUEST);
         }
-        boolean pureTrueque = book.isTrueque() && !book.isVenta() && !book.isRegalo();
+        boolean esPuntoSeguro = book.getLocal() != null;
+        boolean pureTrueque = !esPuntoSeguro && book.isTrueque() && !book.isVenta() && !book.isRegalo();
         if (pureTrueque && !bookRepository.existsByOwner_IdAndStatusAndTrueque(
                 liker.getId(), BookStatus.AVAILABLE, true)) {
             throw new AppException(
@@ -108,9 +117,22 @@ public class LikeService {
 
         User owner = book.getOwner();
 
+        if (esPuntoSeguro) {
+            Local local = book.getLocal();
+            int plazoDias = liker.isPremium() ? 60 : 30;
+            List<String> promociones = local.getPromociones().stream()
+                    .filter(Promocion::isActive)
+                    .map(Promocion::getDescription)
+                    .toList();
+            PuntoSeguroInfo info = new PuntoSeguroInfo(
+                    local.getId(), local.getName(), local.getAddress(),
+                    plazoDias, liker.isPremium(), promociones);
+            return new LikeResult(false, null, null, false, info);
+        }
+
         if (book.isVenta() || book.isRegalo()) {
             Conversation conversation = conversationService.openBookContact(liker, book);
-            return new LikeResult(false, null, conversation.getId(), true);
+            return new LikeResult(false, null, conversation.getId(), true, null);
         }
 
         Optional<BookLike> mutualLike =
@@ -124,11 +146,14 @@ public class LikeService {
             Conversation conversation = conversationService.findOrCreate(liker, owner);
             notificationService.notifyMatch(liker, owner, match.getId());
 
-            return new LikeResult(true, match.getId(), conversation.getId(), false);
+            return new LikeResult(true, match.getId(), conversation.getId(), false, null);
         }
 
         notificationService.notifyBookLiked(owner, liker, book.getTitle(), bookId);
-        return new LikeResult(false, null, null, false);
+        if (owner.isNotifyOnBookLike()) {
+            emailService.sendBookLikedEmail(owner.getEmail(), owner.getName(), liker.getName(), book.getTitle());
+        }
+        return new LikeResult(false, null, null, false, null);
     }
 
     @Transactional
@@ -168,6 +193,9 @@ public class LikeService {
         return new LikesPage(items, result.hasNext(), result.getTotalElements());
     }
 
-    public record LikeResult(boolean matched, UUID matchId, UUID conversationId, boolean directContact) {}
+    public record LikeResult(boolean matched, UUID matchId, UUID conversationId, boolean directContact,
+                              PuntoSeguroInfo puntoSeguro) {}
+    public record PuntoSeguroInfo(UUID localId, String localName, String localAddress,
+                                   int plazoDias, boolean isPremiumUser, List<String> promociones) {}
     public record LikesPage(List<ReceivedLikeResponse> items, boolean hasMore, long totalCount) {}
 }

@@ -30,6 +30,12 @@ public class Local {
 
     private String logoUrl;
 
+    private String cartaUrl;
+
+    private Double latitude;
+
+    private Double longitude;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LocalCategory category;

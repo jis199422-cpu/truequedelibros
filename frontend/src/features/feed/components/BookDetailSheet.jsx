@@ -9,7 +9,8 @@ export function BookDetailSheet({ book, onClose, onLike, onDislike, onChat, onOf
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const showChatButton = book.venta || book.regalo
+  const isPuntoSeguro = !!book.puntoSeguro
+  const showChatButton = !isPuntoSeguro && (book.venta || book.regalo)
 
   const handleLike = () => {
     onClose()
@@ -53,10 +54,10 @@ export function BookDetailSheet({ book, onClose, onLike, onDislike, onChat, onOf
           <p className="book-detail-author">{book.author}</p>
 
           <div className="book-detail-chips">
-            <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>
+            {!isPuntoSeguro && <span className={`book-card-condition condition-${book.condition}`}>{book.condition}</span>}
             {book.genre && <span className="card-genre">{genreLabel(book.genre)}</span>}
           </div>
-          {(book.trueque || book.regalo || book.venta) && (
+          {!isPuntoSeguro && (book.trueque || book.regalo || book.venta) && (
             <div className="card-exchange-pills" style={{ marginTop: '0.5rem' }}>
               {book.trueque && <span className="card-exchange-pill">Trueque</span>}
               {book.regalo && <span className="card-exchange-pill">Regalar</span>}
@@ -74,15 +75,30 @@ export function BookDetailSheet({ book, onClose, onLike, onDislike, onChat, onOf
             </div>
           )}
 
-          <div className="book-detail-owner">
-            <OwnerAvatar owner={book.owner} />
-            <div>
-              <p className="book-detail-owner-name">{book.owner?.name}</p>
-              {book.owner?.city && (
-                <p className="book-detail-owner-city">📍 {book.owner.city}</p>
-              )}
+
+          {isPuntoSeguro ? (
+            <div className="book-detail-owner">
+              {book.localLogoUrl
+                ? <img src={book.localLogoUrl} alt={book.localName} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                : <span style={{ fontSize: '1.75rem' }}>🏪</span>
+              }
+              <div>
+                <p className="book-detail-owner-name">{book.localName}</p>
+                {book.localAddress && <p className="book-detail-owner-city">📍 {book.localAddress}</p>}
+                {book.distanceKm != null && <p className="book-detail-owner-city">{book.distanceKm.toFixed(1)} km</p>}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="book-detail-owner">
+              <OwnerAvatar owner={book.owner} />
+              <div>
+                <p className="book-detail-owner-name">{book.owner?.name}</p>
+                {book.owner?.city && (
+                  <p className="book-detail-owner-city">📍 {book.owner.city}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="book-detail-actions">
             <button
@@ -100,7 +116,7 @@ export function BookDetailSheet({ book, onClose, onLike, onDislike, onChat, onOf
               >
                 💬
               </button>
-            ) : (
+            ) : isPuntoSeguro ? null : (
               <button
                 className="action-btn action-btn-offer book-detail-btn"
                 onClick={handleOffer}

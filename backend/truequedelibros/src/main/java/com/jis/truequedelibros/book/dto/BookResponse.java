@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -30,6 +31,12 @@ public class BookResponse {
     private BigDecimal precio;
     private boolean firstBook;
     private boolean likedByCurrentUser;
+    private boolean puntoSeguro;
+    private UUID localId;
+    private String localName;
+    private String localAddress;
+    private String localLogoUrl;
+    private List<String> localPromociones;
 
     @Data
     @Builder

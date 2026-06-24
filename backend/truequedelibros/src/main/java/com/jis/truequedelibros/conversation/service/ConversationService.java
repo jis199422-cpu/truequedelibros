@@ -41,12 +41,18 @@ public class ConversationService {
 
     @Transactional
     public Conversation openBookContact(User contactor, Book book) {
+        if (contactor.getTermsAcceptedAt() == null) {
+            throw new AppException("Debés aceptar los términos y condiciones de la plataforma", HttpStatus.FORBIDDEN);
+        }
         User owner = book.getOwner();
         return findOrCreate(contactor, owner);
     }
 
     @Transactional
     public Conversation findOrCreateByUserId(UUID targetUserId, User currentUser) {
+        if (currentUser.getTermsAcceptedAt() == null) {
+            throw new AppException("Debés aceptar los términos y condiciones de la plataforma", HttpStatus.FORBIDDEN);
+        }
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AppException("Usuario no encontrado", HttpStatus.NOT_FOUND));
         return findOrCreate(currentUser, target);

@@ -44,7 +44,7 @@ function BottomNav() {
     <nav className="bottom-nav" aria-label="Navegación principal">
       <NavLink to="/feed" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
         <FeedIcon />
-        <span>Explorar</span>
+        <span>Libros Cercanos</span>
       </NavLink>
       <NavLink to="/likes" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
         <HeartIcon />

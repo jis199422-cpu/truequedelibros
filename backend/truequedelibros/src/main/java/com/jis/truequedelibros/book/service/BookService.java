@@ -1,6 +1,7 @@
 package com.jis.truequedelibros.book.service;
 
 import com.jis.truequedelibros.analytics.service.ProductEventService;
+import com.jis.truequedelibros.beneficio.domain.Promocion;
 import com.jis.truequedelibros.book.domain.Book;
 import com.jis.truequedelibros.book.dto.BookResponse;
 import com.jis.truequedelibros.book.dto.CreateBookRequest;
@@ -176,6 +177,17 @@ public class BookService {
                         .city(book.getOwner().getCity())
                         .build())
                 .createdAt(book.getCreatedAt())
+                .puntoSeguro(book.getLocal() != null)
+                .localId(book.getLocal() != null ? book.getLocal().getId() : null)
+                .localName(book.getLocal() != null ? book.getLocal().getName() : null)
+                .localAddress(book.getLocal() != null ? book.getLocal().getAddress() : null)
+                .localLogoUrl(book.getLocal() != null ? book.getLocal().getLogoUrl() : null)
+                .localPromociones(book.getLocal() != null
+                        ? book.getLocal().getPromociones().stream()
+                                .filter(Promocion::isActive)
+                                .map(Promocion::getDescription)
+                                .toList()
+                        : null)
                 .build();
     }
 

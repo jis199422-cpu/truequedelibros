@@ -43,6 +43,9 @@ public class WishlistService {
                 .user(user)
                 .bookTitle(request.getBookTitle())
                 .build());
+        if (user.isWishlistNotifyExternalPurchase()) {
+            emailService.sendExternalPurchaseRequestEmail(user, List.of(request.getBookTitle()));
+        }
         return toResponse(item);
     }
 
@@ -68,12 +71,14 @@ public class WishlistService {
                 .forEach(item -> {
                     notificationService.notifyWishlistMatch(
                             item.getUser(), book.getTitle(), owner.getCity(), book.getId());
-                    emailService.sendWishlistNotificationEmail(
-                            item.getUser().getEmail(),
-                            item.getUser().getName(),
-                            book.getTitle(),
-                            owner.getName(),
-                            owner.getCity());
+                    if (item.getUser().isWishlistNotifyOnMatch()) {
+                        emailService.sendWishlistNotificationEmail(
+                                item.getUser().getEmail(),
+                                item.getUser().getName(),
+                                book.getTitle(),
+                                owner.getName(),
+                                owner.getCity());
+                    }
                 });
     }
 

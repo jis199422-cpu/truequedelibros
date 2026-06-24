@@ -12,6 +12,10 @@ export const saveSubscriptionInterest = (interested) =>
 export const saveOnboarding = (intent, customIntent) =>
   client.post('/users/me/onboarding', { intent, customIntent })
 
+export const updateNotificationPreferences = (data) => client.put('/users/me/notification-preferences', data)
+
+export const acceptTerms = () => client.post('/users/me/terms-acceptance')
+
 export const uploadToS3 = (uploadUrl, file) =>
   fetch(uploadUrl, {
     method: 'PUT',

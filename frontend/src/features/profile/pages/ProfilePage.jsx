@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/authStore'
-import { getPublicProfile, updateLocation } from '../../../shared/api/users.api'
+import useTermsGateStore from '../../terms/store/termsGateStore'
+import { getPublicProfile, updateLocation, updateNotificationPreferences } from '../../../shared/api/users.api'
 import { updateBook, deleteBook } from '../../../shared/api/books.api'
 import { getWishlist, addToWishlist, removeFromWishlist } from '../../../shared/api/wishlist.api'
 import { startBookConversation } from '../../../shared/api/conversations.api'
@@ -14,7 +15,12 @@ import { Spinner } from '../../../shared/components/Spinner'
 import { Tooltip } from '../../../shared/components/Tooltip'
 import { UserAvatar } from '../../../shared/components/UserAvatar'
 
-export function ProfilePage() {
+export function ProfileRoute() {
+  const { userId } = useParams()
+  return <ProfilePage key={userId} />
+}
+
+function ProfilePage() {
   const { userId } = useParams()
   const navigate = useNavigate()
   const currentUser = useAuthStore((s) => s.user)
@@ -86,6 +92,23 @@ export function ProfilePage() {
         {profile.city && <p className="profile-city"><span>📍</span> {profile.city}</p>}
 
         {isOwn && (
+          currentUser?.termsAcceptedAt ? (
+            <p className="profile-terms-status">
+              ✓ Ha aceptado los términos y condiciones de la plataforma ({formatDate(currentUser.termsAcceptedAt)})
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="profile-terms-link"
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-primary, #4B0082)', textDecoration: 'underline', fontSize: '0.85rem', cursor: 'pointer' }}
+              onClick={() => useTermsGateStore.getState().requireTerms(() => {})}
+            >
+              Aceptar Términos y condiciones de la plataforma
+            </button>
+          )
+        )}
+
+        {isOwn && (
           <div className="profile-actions">
             <button className="btn btn-outline btn-sm" onClick={() => navigate('/profile/edit')}>
               Editar perfil
@@ -154,6 +177,12 @@ function OwnProfileTabs({ books: initialBooks, navigate, onboardingIntent }) {
           onClick={() => setActiveTab('wishlist')}
         >
           Lista de deseos
+        </button>
+        <button
+          className={`profile-tab${activeTab === 'notifications' ? ' profile-tab--active' : ''}`}
+          onClick={() => setActiveTab('notifications')}
+        >
+          Notificaciones
         </button>
       </div>
 
@@ -233,12 +262,13 @@ function OwnProfileTabs({ books: initialBooks, navigate, onboardingIntent }) {
         </div>
       )}
 
-      {activeTab === 'wishlist' && <WishlistTab />}
+      {activeTab === 'wishlist' && <WishlistTab onOpenNotifications={() => setActiveTab('notifications')} />}
+      {activeTab === 'notifications' && <NotificationsTab />}
     </>
   )
 }
 
-function WishlistTab() {
+function WishlistTab({ onOpenNotifications }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [input, setInput] = useState('')
@@ -286,6 +316,13 @@ function WishlistTab() {
   return (
     <div className="profile-tab-content">
       <p className="wishlist-hint">Te avisaremos cuando alguien cercano publique un título de tu lista.</p>
+      <button
+        type="button"
+        onClick={onOpenNotifications}
+        style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-primary, #4B0082)', textDecoration: 'underline', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem' }}
+      >
+        Cambiar opciones de envío de notificaciones
+      </button>
       <form className="wishlist-form" onSubmit={handleAdd}>
         <input
           ref={inputRef}
@@ -324,6 +361,67 @@ function WishlistTab() {
   )
 }
 
+function NotificationsTab() {
+  const { user, accessToken, setAuth } = useAuthStore()
+  const [prefs, setPrefs] = useState({
+    wishlistNotifyOnMatch: user?.wishlistNotifyOnMatch ?? true,
+    wishlistNotifyExternalPurchase: user?.wishlistNotifyExternalPurchase ?? false,
+    notifyOnNewMessage: user?.notifyOnNewMessage ?? true,
+    notifyOnBookLike: user?.notifyOnBookLike ?? true,
+  })
+
+  const handleChange = async (field, value) => {
+    const previous = prefs[field]
+    setPrefs((p) => ({ ...p, [field]: value }))
+    try {
+      const { data } = await updateNotificationPreferences({ [field]: value })
+      setAuth(accessToken, data)
+    } catch {
+      setPrefs((p) => ({ ...p, [field]: previous }))
+      toast.error('Error al guardar tus preferencias')
+    }
+  }
+
+  return (
+    <div className="profile-tab-content">
+      <div className="wishlist-preferences" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        <label className="wishlist-preference-label">
+          <input
+            type="checkbox"
+            checked={prefs.wishlistNotifyOnMatch}
+            onChange={(e) => handleChange('wishlistNotifyOnMatch', e.target.checked)}
+          />
+          Enviarme notificaciones por e-mail cuando los libros agregados a mi Lista de deseos sean agregados a trueque de libros.
+        </label>
+        <label className="wishlist-preference-label">
+          <input
+            type="checkbox"
+            checked={prefs.wishlistNotifyExternalPurchase}
+            onChange={(e) => handleChange('wishlistNotifyExternalPurchase', e.target.checked)}
+          />
+          Si no aparecen en trueque de libros, notificarme de opciones de compra en otros sitios.
+        </label>
+        <label className="wishlist-preference-label">
+          <input
+            type="checkbox"
+            checked={prefs.notifyOnNewMessage}
+            onChange={(e) => handleChange('notifyOnNewMessage', e.target.checked)}
+          />
+          Recibir email cuando alguien me envíe un mensaje.
+        </label>
+        <label className="wishlist-preference-label">
+          <input
+            type="checkbox"
+            checked={prefs.notifyOnBookLike}
+            onChange={(e) => handleChange('notifyOnBookLike', e.target.checked)}
+          />
+          Recibir email cuando alguien le dé like a mi libro.
+        </label>
+      </div>
+    </div>
+  )
+}
+
 function OtherUserBooks({ name, books }) {
   const navigate = useNavigate()
   const { handleLike, match, clearMatch, liking } = useLikeBook()
@@ -336,11 +434,17 @@ function OtherUserBooks({ name, books }) {
   const availableBooks = books.filter(b => b.status === 'AVAILABLE')
 
   const handleLikeClick = (book) => {
-    setLikedIds((prev) => new Set(prev).add(book.id))
-    handleLike(book)
+    useTermsGateStore.getState().requireTerms(() => {
+      setLikedIds((prev) => new Set(prev).add(book.id))
+      handleLike(book)
+    })
   }
 
-  const handleChat = async (book) => {
+  const handleChat = (book) => {
+    useTermsGateStore.getState().requireTerms(() => performChat(book))
+  }
+
+  const performChat = async (book) => {
     setChattingId(book.id)
     try {
       const { data } = await startBookConversation(book.id)

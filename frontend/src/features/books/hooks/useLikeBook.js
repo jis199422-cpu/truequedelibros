@@ -3,19 +3,24 @@ import toast from 'react-hot-toast'
 import { likeBook } from '../../../shared/api/books.api'
 import useAuthStore from '../../auth/store/authStore'
 import useLikeGateStore from '../../feed/store/likeGateStore'
-import { trackMatchCreated } from '../../../shared/utils/metaPixel'
+import useTermsGateStore from '../../terms/store/termsGateStore'
+import { trackMatchCreated, trackPuntoSeguroLiked } from '../../../shared/utils/metaPixel'
 
 export function useLikeBook() {
   const currentUser = useAuthStore((s) => s.user)
   const { dailyCount, dailyLimit, isPremium, hasBooks, warningShown, incrementCount, markWarningShown } = useLikeGateStore()
   const [match, setMatch] = useState(null)
   const [directContact, setDirectContact] = useState(null)
+  const [puntoSeguroInfo, setPuntoSeguroInfo] = useState(null)
   const [liking, setLiking] = useState(false)
   const [gateModal, setGateModal] = useState(null)
 
-  const handleLike = async (book) => {
+  const handleLike = (book) => {
     if (liking) return
+    useTermsGateStore.getState().requireTerms(() => performLike(book))
+  }
 
+  const performLike = async (book) => {
     const userId = currentUser?.id
     const premium = currentUser?.premium ?? isPremium
 
@@ -33,6 +38,15 @@ export function useLikeBook() {
         trackMatchCreated({ bookTitle: book.title, bookGenre: book.genre, ownerUserId: book.owner?.id, conversationId: data.conversationId })
       } else if (data.directContact) {
         setDirectContact({ conversationId: data.conversationId })
+      } else if (data.puntoSeguro) {
+        setPuntoSeguroInfo({
+          localName: data.localName,
+          localAddress: data.localAddress,
+          plazoDias: data.plazoDias,
+          isPremiumUser: data.isPremiumUser,
+          promociones: data.promociones ?? [],
+        })
+        trackPuntoSeguroLiked({ localName: data.localName, bookTitle: book.title })
       }
 
       if (userId && !premium) {
@@ -70,8 +84,13 @@ export function useLikeBook() {
 
   const clearMatch = () => setMatch(null)
   const clearDirectContact = () => setDirectContact(null)
+  const clearPuntoSeguroInfo = () => setPuntoSeguroInfo(null)
   const clearGateModal = () => setGateModal(null)
   const markWarning = () => { if (currentUser?.id) markWarningShown(currentUser.id) }
 
-  return { handleLike, match, clearMatch, directContact, clearDirectContact, liking, gateModal, clearGateModal, markWarning }
+  return {
+    handleLike, match, clearMatch, directContact, clearDirectContact,
+    puntoSeguroInfo, clearPuntoSeguroInfo,
+    liking, gateModal, clearGateModal, markWarning,
+  }
 }

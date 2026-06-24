@@ -52,7 +52,9 @@ public class MessageService {
         User recipient = conversation.getUserA().getId().equals(sender.getId())
                 ? conversation.getUserB() : conversation.getUserA();
         notificationService.notifyNewMessage(recipient, sender, conversationId);
-        emailService.sendNewMessageEmail(recipient.getEmail(), recipient.getName(), sender.getName());
+        if (recipient.isNotifyOnNewMessage()) {
+            emailService.sendNewMessageEmail(recipient.getEmail(), recipient.getName(), sender.getName());
+        }
 
         return conversationService.toMessageResponse(message);
     }

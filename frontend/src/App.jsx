@@ -13,7 +13,7 @@ import { GoogleCallbackPage } from './features/auth/pages/GoogleCallbackPage'
 import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './features/auth/pages/ResetPasswordPage'
 import { FeedPage } from './features/feed/pages/FeedPage'
-import { ProfilePage } from './features/profile/pages/ProfilePage'
+import { ProfileRoute } from './features/profile/pages/ProfilePage'
 import { EditProfilePage } from './features/profile/pages/EditProfilePage'
 import { MyBooksPage } from './features/books/pages/MyBooksPage'
 import { BookFormPage } from './features/books/pages/BookFormPage'
@@ -29,6 +29,7 @@ import { ManagedExchangePage } from './features/managedExchange/pages/ManagedExc
 import { BeneficiosPage } from './features/beneficios/pages/BeneficiosPage'
 import { LocalDashboardPage } from './features/beneficios/pages/LocalDashboardPage'
 import { AdminLocalesPage } from './features/admin/pages/AdminLocalesPage'
+import { TermsAcceptanceModal } from './features/terms/components/TermsAcceptanceModal'
 
 function AuthInitializer({ children }) {
   const { setAuth, clearAuth, setInitialized } = useAuthStore()
@@ -106,6 +107,7 @@ export default function App() {
   return (
     <AuthInitializer>
       <RouteTracker />
+      <TermsAcceptanceModal />
       <StompProvider>
         <Routes>
           {/* Public */}
@@ -126,7 +128,7 @@ export default function App() {
               <Route path="/likes" element={<LikesPage />} />
               <Route path="/chat" element={<ConversationListPage />} />
               <Route path="/chat/:conversationId" element={<ChatPage />} />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
+              <Route path="/profile/:userId" element={<ProfileRoute />} />
               <Route path="/profile/edit" element={<EditProfilePage />} />
               <Route path="/my-books" element={<MyBooksPage />} />
               <Route path="/books/new" element={<BookFormPage />} />

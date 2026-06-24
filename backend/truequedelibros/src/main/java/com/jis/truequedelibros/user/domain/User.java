@@ -82,6 +82,25 @@ public class User implements UserDetails {
     @Column(name = "onboarding_notes", length = 500)
     private String onboardingNotes;
 
+    @Column(name = "wishlist_notify_on_match", nullable = false)
+    @Builder.Default
+    private boolean wishlistNotifyOnMatch = true;
+
+    @Column(name = "wishlist_notify_external_purchase", nullable = false)
+    @Builder.Default
+    private boolean wishlistNotifyExternalPurchase = false;
+
+    @Column(name = "notify_on_new_message", nullable = false)
+    @Builder.Default
+    private boolean notifyOnNewMessage = true;
+
+    @Column(name = "notify_on_book_like", nullable = false)
+    @Builder.Default
+    private boolean notifyOnBookLike = true;
+
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+
     @PrePersist
     void prePersist() {
         createdAt = updatedAt = LocalDateTime.now();

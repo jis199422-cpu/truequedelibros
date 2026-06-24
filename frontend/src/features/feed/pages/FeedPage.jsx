@@ -9,16 +9,17 @@ import { updateLocation } from '../../../shared/api/users.api'
 import { getCurrentUser } from '../../../shared/api/auth.api'
 import { startOfferConversation, startBookConversation } from '../../../shared/api/conversations.api'
 import useLikeGateStore from '../store/likeGateStore'
+import useTermsGateStore from '../../terms/store/termsGateStore'
 import { useLikeBook } from '../../books/hooks/useLikeBook'
 import { SwipeCard } from '../components/SwipeCard'
 import { MatchModal } from '../components/MatchModal'
+import { PuntoSeguroLikeModal } from '../components/PuntoSeguroLikeModal'
 import { BookDetailSheet } from '../components/BookDetailSheet'
 import { LocationPermissionModal } from '../components/LocationPermissionModal'
 import { PremiumModal } from '../../../shared/components/PremiumModal'
 import { LikeGateModal } from '../components/LikeGateModal'
 import { TruequeGateModal } from '../components/TruequeGateModal'
 import { Spinner } from '../../../shared/components/Spinner'
-import { PlanLectorSection } from '../../readingPlans/components/PlanLectorSection'
 
 export function FeedPage() {
   const navigate = useNavigate()
@@ -30,11 +31,15 @@ export function FeedPage() {
   const hasBooks = useLikeGateStore((s) => s.hasBooks)
   const resetAt = useLikeGateStore((s) => s.resetAt)
 
-  const { handleLike: triggerLike, match, clearMatch, directContact, clearDirectContact, gateModal, clearGateModal, markWarning } = useLikeBook()
+  const {
+    handleLike: triggerLike, match, clearMatch, directContact, clearDirectContact,
+    puntoSeguroInfo, clearPuntoSeguroInfo,
+    gateModal, clearGateModal, markWarning,
+  } = useLikeBook()
 
   const autoReloadTriggered = useRef(false)
   const interactedIds = useRef(new Set())
-  const shownIds = useRef(new Set())
+  const cursorRef = useRef(null)
 
   const [queue, setQueue] = useState([])
   const [hasMore, setHasMore] = useState(true)
@@ -58,9 +63,9 @@ export function FeedPage() {
     try {
       const lat = overrideLat ?? guestCoords?.lat ?? currentUser?.latitude ?? null
       const lng = overrideLng ?? guestCoords?.lng ?? currentUser?.longitude ?? null
-      const { data } = await getFeed(Array.from(shownIds.current), null, lat, lng)
+      const { data } = await getFeed(cursorRef.current, null, lat, lng)
       const books = Array.isArray(data?.books) ? data.books : []
-      books.forEach((b) => shownIds.current.add(b.id))
+      cursorRef.current = data?.cursor ?? null
       const hasUninteracted = books.some((b) => !interactedIds.current.has(b.id))
       if (hasUninteracted) autoReloadTriggered.current = false
       setQueue((prev) => {
@@ -123,6 +128,10 @@ export function FeedPage() {
   const handleLike = async () => {
     if (isGuest) { setShowAuthPrompt(true); return false }
     if (truequeGated) { setShowTruequeGateModal(true); return false }
+    if (!currentUser?.termsAcceptedAt) {
+      useTermsGateStore.getState().requireTerms(() => {})
+      return false
+    }
     const book = queue[0]
     interactedIds.current.add(book.id)
     removeTop()
@@ -143,12 +152,16 @@ export function FeedPage() {
     } catch {}
   }
 
-  const handleOffer = async () => {
+  const handleOffer = () => {
     if (isGuest) { setShowAuthPrompt(true); return }
     if (truequeGated) { setShowTruequeGateModal(true); return }
     if (!currentUser?.premium) { setShowPremiumModal(true); return }
     const book = queue[0]
     if (!book) return
+    useTermsGateStore.getState().requireTerms(() => performOffer(book))
+  }
+
+  const performOffer = async (book) => {
     setOffering(true)
     try {
       const { data } = await startOfferConversation(book.owner.id)
@@ -160,11 +173,15 @@ export function FeedPage() {
     }
   }
 
-  const handleChat = async () => {
+  const handleChat = () => {
     if (isGuest) { setShowAuthPrompt(true); return }
     if (truequeGated) { setShowTruequeGateModal(true); return }
     const book = queue[0]
     if (!book) return
+    useTermsGateStore.getState().requireTerms(() => performChat(book))
+  }
+
+  const performChat = async (book) => {
     setOffering(true)
     try {
       const { data } = await startBookConversation(book.id)
@@ -190,7 +207,7 @@ export function FeedPage() {
       setGuestCoords({ lat: latitude, lng: longitude })
     }
     setShowLocationModal(false)
-    shownIds.current = new Set()
+    cursorRef.current = null
     setQueue([])
     setHasMore(true)
     setLoading(true)
@@ -201,13 +218,13 @@ export function FeedPage() {
     <>
       <div className="spinner-page"><Spinner size="lg" /></div>
       {match && <MatchModal book={match.book} conversationId={match.conversationId} onClose={clearMatch} />}
+      {puntoSeguroInfo && <PuntoSeguroLikeModal info={puntoSeguroInfo} onClose={clearPuntoSeguroInfo} />}
     </>
   )
 
   if (queue.length === 0) {
     return (
       <div className="feed-page-scroll">
-        <PlanLectorSection isGuest={isGuest} />
         <div className="feed-empty">
           <span style={{ fontSize: '3.5rem' }}>📚</span>
           <h2>¡Has visto todos los libros cercanos!</h2>
@@ -231,12 +248,13 @@ export function FeedPage() {
           <button
             className="btn btn-outline btn-sm"
             style={{ marginTop: '0.5rem', width: 'auto' }}
-            onClick={() => { shownIds.current = new Set(); setLoading(true); loadMore(undefined, undefined, true).finally(() => setLoading(false)) }}
+            onClick={() => { cursorRef.current = null; setLoading(true); loadMore(undefined, undefined, true).finally(() => setLoading(false)) }}
           >
             Recargar
           </button>
         </div>
         {match && <MatchModal book={match.book} conversationId={match.conversationId} onClose={clearMatch} />}
+        {puntoSeguroInfo && <PuntoSeguroLikeModal info={puntoSeguroInfo} onClose={clearPuntoSeguroInfo} />}
         {!isGuest && (
           <button className={`feed-fab${!hasBooks ? ' feed-fab--glow' : ''}`} aria-label="Agregar libro" onClick={() => navigate('/books/new')}>+</button>
         )}
@@ -246,7 +264,8 @@ export function FeedPage() {
 
   const visible = queue.slice(0, 3)
   const topBook = queue[0]
-  const showChatButton = topBook?.venta || topBook?.regalo
+  const isPuntoSeguro = !!topBook?.puntoSeguro
+  const showChatButton = !isPuntoSeguro && (topBook?.venta || topBook?.regalo)
 
   return (
     <div className="feed-page-scroll">
@@ -299,7 +318,6 @@ export function FeedPage() {
           </button>
         </div>
       )}
-    <PlanLectorSection isGuest={isGuest} />
     <div className="feed-container">
 
       <div className="card-stack">
@@ -328,6 +346,13 @@ export function FeedPage() {
               {offering ? <Spinner size="sm" /> : '💬'}
             </button>
             <span className="action-btn-label">{topBook?.venta ? 'Chatear con el vendedor' : 'Chatear'}</span>
+          </div>
+        ) : isPuntoSeguro ? (
+          <div className="action-btn-wrap">
+            <button className="action-btn action-btn-like" onClick={handleLike} aria-label="Me interesa">
+              ♥
+            </button>
+            <span className="action-btn-label">Me interesa</span>
           </div>
         ) : (
           <>
@@ -364,6 +389,10 @@ export function FeedPage() {
           conversationId={match.conversationId}
           onClose={clearMatch}
         />
+      )}
+
+      {puntoSeguroInfo && (
+        <PuntoSeguroLikeModal info={puntoSeguroInfo} onClose={clearPuntoSeguroInfo} />
       )}
 
       {showAuthPrompt && (

@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -53,12 +52,12 @@ public class BookController {
 
     @GetMapping("/feed")
     public ResponseEntity<FeedService.FeedPage> getFeed(
-            @RequestParam(required = false) List<UUID> excludeIds,
+            @RequestParam(required = false) UUID cursor,
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) Double lat,
             @RequestParam(required = false) Double lng,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(feedService.getFeed(user, excludeIds, genre, lat, lng));
+        return ResponseEntity.ok(feedService.getFeed(user, cursor, genre, lat, lng));
     }
 
     @GetMapping("/{id}")

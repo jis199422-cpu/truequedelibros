@@ -4,6 +4,7 @@ import com.jis.truequedelibros.user.domain.Role;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -22,4 +23,9 @@ public class UserResponse {
     private boolean onboardingCompleted;
     private String onboardingIntent;
     private boolean hasBooks;
+    private boolean wishlistNotifyOnMatch;
+    private boolean wishlistNotifyExternalPurchase;
+    private boolean notifyOnNewMessage;
+    private boolean notifyOnBookLike;
+    private LocalDateTime termsAcceptedAt;
 }

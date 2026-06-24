@@ -36,3 +36,25 @@ export const uploadLogo = async (file) => {
   await uploadToS3(data.uploadUrl, resized)
   return data.imageUrl
 }
+
+// ── Libros de punto seguro ───────────────────────────────────────────────────
+
+export const getLocalPublicBooks    = (localId)         => client.get(`/locales/${localId}/books`)
+export const reportBookUnavailable  = (localId, bookId, message) => client.post(`/locales/${localId}/books/${bookId}/report`, { message: message || null })
+
+export const getLocalBooks       = (localId)            => client.get(`/admin/locales/${localId}/books`)
+export const adminCreateLocalBook = (localId, data)      => client.post(`/admin/locales/${localId}/books`, data)
+export const adminUpdateLocalBook = (localId, id, data)  => client.put(`/admin/locales/${localId}/books/${id}`, data)
+export const adminDeleteLocalBook = (localId, id)        => client.delete(`/admin/locales/${localId}/books/${id}`)
+
+export const uploadBookCover = async (file) => {
+  let resized = file
+  try {
+    resized = await resizeImage(file, { maxWidth: 800, maxHeight: 800 })
+  } catch {
+    // si falla el resize, se sube el archivo original
+  }
+  const { data } = await client.post('/books/upload-url', { fileName: resized.name, contentType: resized.type })
+  await uploadToS3(data.uploadUrl, resized)
+  return data.imageUrl
+}

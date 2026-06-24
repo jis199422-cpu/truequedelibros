@@ -1,14 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { getWishlist, addToWishlist, removeFromWishlist } from '../../../shared/api/wishlist.api'
+import { updateNotificationPreferences } from '../../../shared/api/users.api'
 import { Spinner } from '../../../shared/components/Spinner'
+import useAuthStore from '../../auth/store/authStore'
 
 export function WishlistPage() {
+  const { user, accessToken, setAuth } = useAuthStore()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [input, setInput] = useState('')
   const [adding, setAdding] = useState(false)
+  const [notifyOnMatch, setNotifyOnMatch] = useState(user?.wishlistNotifyOnMatch ?? true)
+  const [notifyExternalPurchase, setNotifyExternalPurchase] = useState(user?.wishlistNotifyExternalPurchase ?? false)
   const inputRef = useRef(null)
+
+  const handlePreferenceChange = async (field, value) => {
+    const previous = field === 'wishlistNotifyOnMatch' ? notifyOnMatch : notifyExternalPurchase
+    if (field === 'wishlistNotifyOnMatch') setNotifyOnMatch(value)
+    else setNotifyExternalPurchase(value)
+
+    try {
+      const { data } = await updateNotificationPreferences({ [field]: value })
+      setAuth(accessToken, data)
+    } catch {
+      if (field === 'wishlistNotifyOnMatch') setNotifyOnMatch(previous)
+      else setNotifyExternalPurchase(previous)
+      toast.error('Error al guardar tus preferencias')
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -95,6 +115,27 @@ export function WishlistPage() {
           {adding ? <Spinner size="sm" /> : 'Agregar'}
         </button>
       </form>
+
+      {items.length > 0 && (
+        <div className="wishlist-preferences" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', margin: '0.75rem 0 1rem' }}>
+          <label className="wishlist-preference-label">
+            <input
+              type="checkbox"
+              checked={notifyOnMatch}
+              onChange={(e) => handlePreferenceChange('wishlistNotifyOnMatch', e.target.checked)}
+            />
+            Enviarme notificaciones por e-mail cuando los libros agregados a mi Lista de deseos sean agregados a trueque de libros.
+          </label>
+          <label className="wishlist-preference-label">
+            <input
+              type="checkbox"
+              checked={notifyExternalPurchase}
+              onChange={(e) => handlePreferenceChange('wishlistNotifyExternalPurchase', e.target.checked)}
+            />
+            Si no aparecen en trueque de libros, notificarme de opciones de compra en otros sitios.
+          </label>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="placeholder-page" style={{ height: '50dvh' }}>

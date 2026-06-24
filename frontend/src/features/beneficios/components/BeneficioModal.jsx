@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import toast from 'react-hot-toast'
 import { getCuponActivo, generarCupon, cancelarCupon } from '../api/beneficios.api'
+import useTermsGateStore from '../../terms/store/termsGateStore'
+import { trackBeneficioCanjear } from '../../../shared/utils/metaPixel'
 
 // fase: 'loading' | 'selecting' | 'active' | 'validado'
 
@@ -70,8 +72,13 @@ export function BeneficioModal({ local, onClose }) {
     return () => clearInterval(id)
   }, [fase, cupon, local.id])
 
-  const handleCanjear = async () => {
+  const handleCanjear = () => {
     if (!promoId) { toast.error('Seleccioná una promoción'); return }
+    trackBeneficioCanjear({ localName: local.name, localId: local.id, promocionId: promoId })
+    useTermsGateStore.getState().requireTerms(performCanjear)
+  }
+
+  const performCanjear = async () => {
     setCanjeando(true)
     try {
       const { data } = await generarCupon({ localId: local.id, promocionId: promoId })
